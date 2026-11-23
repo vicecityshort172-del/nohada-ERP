@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,11 +11,61 @@ const DB_PATH = path.join(__dirname, '../data/db.json');
 app.use(cors());
 app.use(express.json());
 
+// PostgreSQL Configuration
+const DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:ZBXgLFndIQXgmpJgeEMRzzHDMlhLSvoy@postgres.railway.internal:5432/railway";
+let pgPool = null;
+let pgConnected = false;
+let memoryCache = null;
+
+async function initPostgres() {
+  if (!DATABASE_URL) return;
+  try {
+    const isInternal = DATABASE_URL.includes('.railway.internal') || DATABASE_URL.includes('localhost');
+    pgPool = new Pool({
+      connectionString: DATABASE_URL,
+      ssl: isInternal ? false : { rejectUnauthorized: false },
+      connectionTimeoutMillis: 4000
+    });
+
+    // Create state table if not exists
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS erp_state (
+        id INT PRIMARY KEY DEFAULT 1,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    const res = await pgPool.query('SELECT data FROM erp_state WHERE id = 1');
+    if (res.rows.length === 0) {
+      let initialData = { jobs: [], stats: {}, demurrageAlerts: [] };
+      try {
+        initialData = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+      } catch (e) {}
+      await pgPool.query('INSERT INTO erp_state (id, data) VALUES (1, $1)', [JSON.stringify(initialData)]);
+      memoryCache = initialData;
+      console.log('✅ PostgreSQL connected & seeded with initial demo data!');
+    } else {
+      memoryCache = res.rows[0].data;
+      console.log('✅ PostgreSQL connected! Live ERP state loaded from PostgreSQL.');
+    }
+    pgConnected = true;
+  } catch (err) {
+    console.warn('ℹ️ PostgreSQL not reachable (using local db.json fallback):', err.message);
+    pgPool = null;
+    pgConnected = false;
+  }
+}
+
 // Helper to read database
 function readDB() {
+  if (memoryCache) {
+    return memoryCache;
+  }
   try {
     const data = fs.readFileSync(DB_PATH, 'utf8');
-    return JSON.parse(data);
+    memoryCache = JSON.parse(data);
+    return memoryCache;
   } catch (error) {
     console.error('Error reading db.json:', error);
     return { jobs: [], stats: {}, demurrageAlerts: [] };
@@ -23,13 +74,24 @@ function readDB() {
 
 // Helper to write database
 function writeDB(data) {
+  memoryCache = data;
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf8');
-    return true;
   } catch (error) {
     console.error('Error writing db.json:', error);
-    return false;
   }
+
+  // Persist asynchronously to PostgreSQL if connected
+  if (pgPool && pgConnected) {
+    pgPool.query(
+      'INSERT INTO erp_state (id, data, updated_at) VALUES (1, $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()',
+      [JSON.stringify(data)]
+    ).catch(err => {
+      console.error('Error persisting to PostgreSQL:', err.message);
+    });
+  }
+
+  return true;
 }
 
 // 1. System stats (KPIs for the 4 colored cards)
@@ -544,10 +606,12 @@ app.use((req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`======================================================`);
-  console.log(`🚀 NOHADA TRADING ERP - BACKEND API RUNNING ON PORT ${PORT}`);
-  console.log(`🌐 System URL: http://localhost:${PORT}`);
-  console.log(`📂 Database: ${DB_PATH}`);
-  console.log(`======================================================`);
+initPostgres().then(() => {
+  app.listen(PORT, () => {
+    console.log(`======================================================`);
+    console.log(`🚀 NOHADA TRADING ERP - BACKEND API RUNNING ON PORT ${PORT}`);
+    console.log(`🌐 System URL: http://localhost:${PORT}`);
+    console.log(`📂 Database: ${pgConnected ? 'PostgreSQL (Railway)' : DB_PATH}`);
+    console.log(`======================================================`);
+  });
 });
