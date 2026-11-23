@@ -57,7 +57,7 @@
       <nav class="py-3">
         <!-- 1. Executive Operations Dashboard -->
         <a href="#dashboard" onclick="switchView('dashboard')" id="nav-dashboard" class="sidebar-nav-item active">
-          <i data-lucide="gauge" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="layout-dashboard" class="w-4 h-4 text-sky-400"></i></span>
           <span>Dashboard</span>
         </a>
 
@@ -66,25 +66,25 @@
         
         <!-- 2. Job Files (Digital Blue Jackets) -->
         <a href="#jobs" onclick="switchView('jobs')" id="nav-jobs" class="sidebar-nav-item">
-          <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="briefcase" class="w-4 h-4 text-blue-400"></i></span>
           <span>Job Files Registry</span>
         </a>
 
         <!-- 2b. Open New Blue File Jacket -->
         <a href="#newjob" onclick="switchView('newjob')" id="nav-newjob" class="sidebar-nav-item">
-          <i data-lucide="folder-plus" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="folder-plus" class="w-4 h-4 text-emerald-400"></i></span>
           <span>New Job File</span>
         </a>
 
         <!-- 3. CPO Guarantees Registry -->
         <a href="#cpo" onclick="switchView('cpo')" id="nav-cpo" class="sidebar-nav-item">
-          <i data-lucide="shield-check" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i></span>
           <span>CPO Guarantees</span>
         </a>
 
         <!-- 4. Customs Duty & Tax Estimator -->
         <a href="#tax" onclick="switchView('tax')" id="nav-tax" class="sidebar-nav-item">
-          <i data-lucide="calculator" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="calculator" class="w-4 h-4 text-purple-400"></i></span>
           <span>Customs Tax Estimator</span>
         </a>
 
@@ -93,7 +93,7 @@
 
         <!-- 5. Active File Cockpit -->
         <a href="#cockpit" onclick="loadJobCockpit(activeCockpitJob ? activeCockpitJob.id : 'ABM00240-26')" id="nav-cockpit" class="sidebar-nav-item">
-          <i data-lucide="file-check-2" class="w-4 h-4"></i>
+          <span class="sidebar-icon-wrap"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-teal-400"></i></span>
           <span id="sidebarCockpitText">File Cockpit</span>
         </a>
       </nav>
@@ -592,10 +592,24 @@
             </table>
           </div>
 
-          <!-- Table Footer -->
-          <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-            <span id="tableEntriesCount">Showing entries</span>
-            <span>Nohada Trading Logistics ERP System</span>
+          <!-- Table Footer with Full Pagination -->
+          <div class="pagination-container" id="jobsPagination">
+            <div class="flex items-center gap-3">
+              <span id="tableEntriesCount">Showing 1 to 5 of 7 entries</span>
+              <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                <span>Per page:</span>
+                <select id="jobsPageSizeSelect" onchange="changeJobsPageSize(this.value)" class="pagination-select">
+                  <option value="5" selected>5</option>
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="ALL">All</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1" id="jobsPaginationControls">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
 
@@ -653,24 +667,85 @@
           </div>
         </div>
 
-        <!-- CPO FILTERS & TABLE -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
-            <!-- Bank Filter Tabs -->
-            <div class="flex flex-wrap items-center gap-1">
-              <span class="text-xs font-bold text-slate-600 mr-2">Filter Bank:</span>
-              <button onclick="filterCpoByBank('ALL')" id="cpo-bank-ALL" class="px-2.5 py-1 text-xs font-bold rounded bg-[#0284c7] text-white">All Banks</button>
-              <button onclick="filterCpoByBank('Abyssinia')" id="cpo-bank-Abyssinia" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">BOA</button>
-              <button onclick="filterCpoByBank('Ethiopia')" id="cpo-bank-Ethiopia" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">CBE</button>
-              <button onclick="filterCpoByBank('Awash')" id="cpo-bank-Awash" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">Awash</button>
-              <button onclick="filterCpoByBank('Abukii')" id="cpo-bank-Abukii" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">Abukii</button>
+        <!-- CPO SEARCH & FILTER SUITE -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
+              <i data-lucide="search" class="w-4 h-4 text-sky-600"></i>
+              <span>CPO & Security Guarantees Search & Filters</span>
+            </div>
+            <button onclick="resetCpoFilters()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 hover:underline">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Filters</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- Search Text Input -->
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Quick Search</label>
+              <div class="relative mt-1">
+                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400"></i>
+                <input type="text" id="cpoQuickSearchInput" onkeyup="handleCpoSearch(event)" placeholder="Search client, file ref, B/L, remarks..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500">
+              </div>
+            </div>
+
+            <!-- Bank Filter -->
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Bank Account</label>
+              <select id="cpoFilterBankSelect" onchange="applyCpoDropdownFilters()" class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white">
+                <option value="ALL">All Banks</option>
+                <option value="Abyssinia">Bank of Abyssinia (BOA)</option>
+                <option value="Ethiopia">Commercial Bank of Ethiopia (CBE)</option>
+                <option value="Awash">Awash Bank</option>
+                <option value="Abukii">Abukii Bank</option>
+                <option value="Gulf">Gulf Badr Group</option>
+                <option value="NIB">NIB International Bank</option>
+              </select>
             </div>
 
             <!-- Status Filter -->
-            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs font-bold">
-              <button onclick="filterCpoByStatus('ALL')" id="cpo-status-ALL" class="px-2.5 py-0.5 rounded bg-slate-800 text-white">All Deposits</button>
-              <button onclick="filterCpoByStatus('HELD')" id="cpo-status-HELD" class="px-2.5 py-0.5 rounded text-amber-700 hover:bg-amber-50">Held Only</button>
-              <button onclick="filterCpoByStatus('RETURNED')" id="cpo-status-RETURNED" class="px-2.5 py-0.5 rounded text-emerald-700 hover:bg-emerald-50">Returned Only</button>
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Status</label>
+              <select id="cpoFilterStatusSelect" onchange="applyCpoDropdownFilters()" class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white">
+                <option value="ALL">All Statuses (Held & Returned)</option>
+                <option value="HELD">🟡 Held Only (In Bank Vault)</option>
+                <option value="RETURNED">🟢 Returned Only (Settled)</option>
+              </select>
+            </div>
+
+            <!-- Type Filter -->
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Deposit / Guarantee Type</label>
+              <select id="cpoFilterTypeSelect" onchange="applyCpoDropdownFilters()" class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white">
+                <option value="ALL">All Payment Types</option>
+                <option value="CPO Guarantee">CPO (Cashier's Payment Order)</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cash">Cash Deposit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- CPO TABLE & FULL PAGINATION -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <!-- Quick Status & Bank Filter Pills Bar -->
+          <div class="p-3 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50 text-xs">
+            <!-- Bank Pills -->
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="font-bold text-slate-600 mr-1.5">Bank Pills:</span>
+              <button onclick="filterCpoByBank('ALL')" id="cpo-bank-ALL" class="px-2.5 py-1 font-bold rounded bg-[#0284c7] text-white">All Banks</button>
+              <button onclick="filterCpoByBank('Abyssinia')" id="cpo-bank-Abyssinia" class="px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200">BOA</button>
+              <button onclick="filterCpoByBank('Ethiopia')" id="cpo-bank-Ethiopia" class="px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200">CBE</button>
+              <button onclick="filterCpoByBank('Awash')" id="cpo-bank-Awash" class="px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200">Awash</button>
+              <button onclick="filterCpoByBank('Abukii')" id="cpo-bank-Abukii" class="px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200">Abukii</button>
+            </div>
+
+            <!-- Status Filter Buttons -->
+            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 font-bold">
+              <button onclick="filterCpoByStatus('ALL')" id="cpo-status-ALL" class="px-2.5 py-0.5 rounded bg-slate-800 text-white">All</button>
+              <button onclick="filterCpoByStatus('HELD')" id="cpo-status-HELD" class="px-2.5 py-0.5 rounded text-amber-700 hover:bg-amber-50">Held</button>
+              <button onclick="filterCpoByStatus('RETURNED')" id="cpo-status-RETURNED" class="px-2.5 py-0.5 rounded text-emerald-700 hover:bg-emerald-50">Returned</button>
             </div>
           </div>
 
@@ -697,9 +772,24 @@
             </table>
           </div>
 
-          <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-            <span id="cpoEntriesCount">Showing CPO records</span>
-            <span>Nohada Trading CPO Settlement Engine</span>
+          <!-- CPO Table Footer with Full Pagination -->
+          <div class="pagination-container" id="cpoPagination">
+            <div class="flex items-center gap-3">
+              <span id="cpoEntriesCount">Showing 1 to 5 of 13 records</span>
+              <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                <span>Per page:</span>
+                <select id="cpoPageSizeSelect" onchange="changeCpoPageSize(this.value)" class="pagination-select">
+                  <option value="5" selected>5</option>
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="ALL">All</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1" id="cpoPaginationControls">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
 
@@ -918,6 +1008,12 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Cockpit Deposits Pagination Footer -->
+            <div class="pagination-container" id="cockpitDepositsPagination">
+              <span id="cockpitDepositsEntriesCount" class="text-xs text-slate-500">Showing entries</span>
+              <div class="flex items-center gap-1" id="cockpitDepositsPaginationControls"></div>
+            </div>
           </div>
 
           <!-- Section B: Itemized Job Expenses (Replaces Free-Text Remarks) -->
@@ -949,6 +1045,12 @@
                   <!-- Injected via JS -->
                 </tbody>
               </table>
+            </div>
+
+            <!-- Cockpit Expenses Pagination Footer -->
+            <div class="pagination-container" id="cockpitExpensesPagination">
+              <span id="cockpitExpensesEntriesCount" class="text-xs text-slate-500">Showing entries</span>
+              <div class="flex items-center gap-1" id="cockpitExpensesPaginationControls"></div>
             </div>
           </div>
 

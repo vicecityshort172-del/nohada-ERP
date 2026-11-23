@@ -11,18 +11,102 @@ let currentJobs = [];
 let activeCockpitJob = null;
 let currentTabFilter = 'all';
 
+// Jobs Pagination State
+let jobsCurrentPage = 1;
+let jobsPageSize = 5;
+let filteredJobsList = [];
+
+// CPO Registry State & Pagination
 let currentCpos = [];
 let currentCpoBankFilter = 'ALL';
 let currentCpoStatusFilter = 'ALL';
+let cpoCurrentPage = 1;
+let cpoPageSize = 5;
+let cpoSearchTerm = '';
+let cpoFilterBank = 'ALL';
+let cpoFilterStatus = 'ALL';
+let cpoFilterType = 'ALL';
+let filteredCposList = [];
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.lucide) {
-    lucide.createIcons();
+// Cockpit Internal Pagination
+let cockpitDepositsPage = 1;
+let cockpitDepositsPageSize = 5;
+let cockpitExpensesPage = 1;
+let cockpitExpensesPageSize = 5;
+
+// Reusable Pagination Controls Renderer
+function renderPaginationControls(containerId, currentPage, totalPages, onPageClickFnName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (totalPages <= 1) {
+    const p1 = document.createElement('button');
+    p1.className = 'pagination-btn active';
+    p1.textContent = '1';
+    container.appendChild(p1);
+    return;
   }
-  loadDashboardData();
-  initTaxEstimatorTable();
-});
+
+  // Prev Button
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'pagination-btn';
+  prevBtn.innerHTML = '&lsaquo; Prev';
+  prevBtn.disabled = currentPage <= 1;
+  prevBtn.onclick = () => window[onPageClickFnName](currentPage - 1);
+  container.appendChild(prevBtn);
+
+  // Page numbers logic
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, startPage + 4);
+  if (endPage - startPage < 4) {
+    startPage = Math.max(1, endPage - 4);
+  }
+
+  if (startPage > 1) {
+    const firstBtn = document.createElement('button');
+    firstBtn.className = 'pagination-btn';
+    firstBtn.textContent = '1';
+    firstBtn.onclick = () => window[onPageClickFnName](1);
+    container.appendChild(firstBtn);
+    if (startPage > 2) {
+      const dots = document.createElement('span');
+      dots.className = 'px-1 text-slate-400 font-bold';
+      dots.textContent = '...';
+      container.appendChild(dots);
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement('button');
+    pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+    pageBtn.textContent = i;
+    pageBtn.onclick = () => window[onPageClickFnName](i);
+    container.appendChild(pageBtn);
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dots = document.createElement('span');
+      dots.className = 'px-1 text-slate-400 font-bold';
+      dots.textContent = '...';
+      container.appendChild(dots);
+    }
+    const lastBtn = document.createElement('button');
+    lastBtn.className = 'pagination-btn';
+    lastBtn.textContent = totalPages;
+    lastBtn.onclick = () => window[onPageClickFnName](totalPages);
+    container.appendChild(lastBtn);
+  }
+
+  // Next Button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'pagination-btn';
+  nextBtn.innerHTML = 'Next &rsaquo;';
+  nextBtn.disabled = currentPage >= totalPages;
+  nextBtn.onclick = () => window[onPageClickFnName](currentPage + 1);
+  container.appendChild(nextBtn);
+}
 
 // Re-run lucide icons on updates
 function refreshIcons() {
@@ -131,8 +215,20 @@ function renderDashboardRecentJobs(jobs) {
   refreshIcons();
 }
 
+function setJobsPage(pageNum) {
+  jobsCurrentPage = pageNum;
+  renderJobsTable(currentJobs);
+}
+
+function changeJobsPageSize(newSize) {
+  jobsPageSize = newSize;
+  jobsCurrentPage = 1;
+  renderJobsTable(currentJobs);
+}
+
 function renderJobsTable(jobs) {
   const tbody = document.getElementById('jobsTableBody');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
   let filtered = jobs;
@@ -142,9 +238,45 @@ function renderJobsTable(jobs) {
     filtered = jobs.filter(j => j.status === 'Cleared');
   }
 
-  document.getElementById('tableEntriesCount').textContent = `Showing ${filtered.length} entries`;
+  // Quick search filter
+  const searchVal = (document.getElementById('tableQuickSearch')?.value || '').toLowerCase().trim();
+  if (searchVal) {
+    filtered = filtered.filter(j =>
+      (j.fileRefNumber || '').toLowerCase().includes(searchVal) ||
+      (j.consignee?.name || '').toLowerCase().includes(searchVal) ||
+      (j.blNumber || '').toLowerCase().includes(searchVal) ||
+      (j.containerNumber || '').toLowerCase().includes(searchVal) ||
+      (j.operationPort || '').toLowerCase().includes(searchVal)
+    );
+  }
 
-  filtered.forEach((job, index) => {
+  filteredJobsList = filtered;
+  const total = filtered.length;
+  const pageSize = jobsPageSize === 'ALL' ? total || 1 : Number(jobsPageSize);
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  if (jobsCurrentPage > totalPages) jobsCurrentPage = totalPages;
+  if (jobsCurrentPage < 1) jobsCurrentPage = 1;
+
+  const startIndex = (jobsCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, total);
+  const pageItems = filtered.slice(startIndex, endIndex);
+
+  const countEl = document.getElementById('tableEntriesCount');
+  if (countEl) {
+    countEl.textContent = total > 0
+      ? `Showing ${startIndex + 1} to ${endIndex} of ${total} entries`
+      : 'Showing 0 of 0 entries';
+  }
+
+  renderPaginationControls('jobsPaginationControls', jobsCurrentPage, totalPages, 'setJobsPage');
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-400 italic">No job files found matching your search.</td></tr>`;
+    refreshIcons();
+    return;
+  }
+
+  pageItems.forEach((job, index) => {
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-100 hover:bg-slate-50/80 transition-colors';
 
@@ -170,7 +302,7 @@ function renderJobsTable(jobs) {
     const balanceText = `${netBal < 0 ? '' : '+'}${netBal.toLocaleString()} ETB`;
 
     tr.innerHTML = `
-      <td class="text-center font-bold text-slate-400 text-xs">${index + 1}</td>
+      <td class="text-center font-bold text-slate-400 text-xs">${startIndex + index + 1}</td>
       <td>
         <span class="font-extrabold text-sky-800 text-xs tracking-tight">${job.fileRefNumber}</span>
       </td>
@@ -267,11 +399,42 @@ async function loadJobCockpit(jobId = 'ABM00240-26') {
   }
 }
 
+function setCockpitDepositsPage(pageNum) {
+  cockpitDepositsPage = pageNum;
+  if (activeCockpitJob) renderCockpitDeposits(activeCockpitJob.deposits || []);
+}
+
 function renderCockpitDeposits(deposits) {
   const tbody = document.getElementById('cockpitDepositsTable');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
-  deposits.forEach((dep) => {
+  const total = deposits.length;
+  const pageSize = cockpitDepositsPageSize;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  if (cockpitDepositsPage > totalPages) cockpitDepositsPage = totalPages;
+  if (cockpitDepositsPage < 1) cockpitDepositsPage = 1;
+
+  const startIndex = (cockpitDepositsPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, total);
+  const pageItems = deposits.slice(startIndex, endIndex);
+
+  const countEl = document.getElementById('cockpitDepositsEntriesCount');
+  if (countEl) {
+    countEl.textContent = total > 0
+      ? `Showing ${startIndex + 1} to ${endIndex} of ${total} deposits`
+      : 'Showing 0 of 0 deposits';
+  }
+
+  renderPaginationControls('cockpitDepositsPaginationControls', cockpitDepositsPage, totalPages, 'setCockpitDepositsPage');
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">No deposit or CPO records for this file.</td></tr>`;
+    refreshIcons();
+    return;
+  }
+
+  pageItems.forEach((dep) => {
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-100';
 
@@ -304,13 +467,46 @@ function renderCockpitDeposits(deposits) {
     `;
     tbody.appendChild(tr);
   });
+
+  refreshIcons();
+}
+
+function setCockpitExpensesPage(pageNum) {
+  cockpitExpensesPage = pageNum;
+  if (activeCockpitJob) renderCockpitExpenses(activeCockpitJob.expenses || []);
 }
 
 function renderCockpitExpenses(expenses) {
   const tbody = document.getElementById('cockpitExpensesTable');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
-  expenses.forEach((exp) => {
+  const total = expenses.length;
+  const pageSize = cockpitExpensesPageSize;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  if (cockpitExpensesPage > totalPages) cockpitExpensesPage = totalPages;
+  if (cockpitExpensesPage < 1) cockpitExpensesPage = 1;
+
+  const startIndex = (cockpitExpensesPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, total);
+  const pageItems = expenses.slice(startIndex, endIndex);
+
+  const countEl = document.getElementById('cockpitExpensesEntriesCount');
+  if (countEl) {
+    countEl.textContent = total > 0
+      ? `Showing ${startIndex + 1} to ${endIndex} of ${total} expenses`
+      : 'Showing 0 of 0 expenses';
+  }
+
+  renderPaginationControls('cockpitExpensesPaginationControls', cockpitExpensesPage, totalPages, 'setCockpitExpensesPage');
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 italic">No disbursed expenses recorded for this file.</td></tr>`;
+    refreshIcons();
+    return;
+  }
+
+  pageItems.forEach((exp) => {
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-100';
 
@@ -324,6 +520,8 @@ function renderCockpitExpenses(expenses) {
     `;
     tbody.appendChild(tr);
   });
+
+  refreshIcons();
 }
 
 function renderCockpitDocuments(docs) {
@@ -839,18 +1037,151 @@ function filterByPortAndSwitch(port) {
 // -----------------------------------------------------------------------------
 async function loadCpoTable() {
   try {
-    let query = '?';
-    if (currentCpoBankFilter !== 'ALL') query += `bank=${encodeURIComponent(currentCpoBankFilter)}&`;
-    if (currentCpoStatusFilter !== 'ALL') query += `status=${encodeURIComponent(currentCpoStatusFilter)}`;
-
-    const res = await fetch(`/api/cpo${query}`);
+    const res = await fetch('/api/cpo');
     if (res.ok) {
       currentCpos = await res.json();
-      renderCpoTable(currentCpos);
+      filterAndRenderCpos();
     }
   } catch (err) {
     console.error('Error fetching CPOs:', err);
   }
+}
+
+function handleCpoSearch(e) {
+  cpoSearchTerm = (e.target.value || '').toLowerCase().trim();
+  cpoCurrentPage = 1;
+  filterAndRenderCpos();
+}
+
+function applyCpoDropdownFilters() {
+  cpoFilterBank = document.getElementById('cpoFilterBankSelect')?.value || 'ALL';
+  cpoFilterStatus = document.getElementById('cpoFilterStatusSelect')?.value || 'ALL';
+  cpoFilterType = document.getElementById('cpoFilterTypeSelect')?.value || 'ALL';
+  cpoCurrentPage = 1;
+  filterAndRenderCpos();
+}
+
+function filterCpoByBank(bank) {
+  cpoFilterBank = bank;
+  const select = document.getElementById('cpoFilterBankSelect');
+  if (select) select.value = bank;
+
+  ['ALL', 'Abyssinia', 'Ethiopia', 'Awash', 'Abukii'].forEach(b => {
+    const btn = document.getElementById(`cpo-bank-${b}`);
+    if (btn) {
+      btn.className = b === bank
+        ? 'px-2.5 py-1 font-bold rounded bg-[#0284c7] text-white'
+        : 'px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200';
+    }
+  });
+
+  cpoCurrentPage = 1;
+  filterAndRenderCpos();
+}
+
+function filterCpoByStatus(status) {
+  cpoFilterStatus = status;
+  const select = document.getElementById('cpoFilterStatusSelect');
+  if (select) select.value = status;
+
+  ['ALL', 'HELD', 'RETURNED'].forEach(s => {
+    const btn = document.getElementById(`cpo-status-${s}`);
+    if (btn) {
+      btn.className = s === status
+        ? 'px-2.5 py-0.5 rounded bg-slate-800 text-white'
+        : 'px-2.5 py-0.5 rounded text-slate-600 hover:bg-slate-100';
+    }
+  });
+
+  cpoCurrentPage = 1;
+  filterAndRenderCpos();
+}
+
+function resetCpoFilters() {
+  cpoSearchTerm = '';
+  cpoFilterBank = 'ALL';
+  cpoFilterStatus = 'ALL';
+  cpoFilterType = 'ALL';
+  cpoCurrentPage = 1;
+
+  const searchInput = document.getElementById('cpoQuickSearchInput');
+  if (searchInput) searchInput.value = '';
+
+  const bankSelect = document.getElementById('cpoFilterBankSelect');
+  if (bankSelect) bankSelect.value = 'ALL';
+
+  const statusSelect = document.getElementById('cpoFilterStatusSelect');
+  if (statusSelect) statusSelect.value = 'ALL';
+
+  const typeSelect = document.getElementById('cpoFilterTypeSelect');
+  if (typeSelect) typeSelect.value = 'ALL';
+
+  ['ALL', 'Abyssinia', 'Ethiopia', 'Awash', 'Abukii'].forEach(b => {
+    const btn = document.getElementById(`cpo-bank-${b}`);
+    if (btn) {
+      btn.className = b === 'ALL'
+        ? 'px-2.5 py-1 font-bold rounded bg-[#0284c7] text-white'
+        : 'px-2.5 py-1 font-bold rounded text-slate-600 hover:bg-slate-200';
+    }
+  });
+
+  ['ALL', 'HELD', 'RETURNED'].forEach(s => {
+    const btn = document.getElementById(`cpo-status-${s}`);
+    if (btn) {
+      btn.className = s === 'ALL'
+        ? 'px-2.5 py-0.5 rounded bg-slate-800 text-white'
+        : 'px-2.5 py-0.5 rounded text-slate-600 hover:bg-slate-100';
+    }
+  });
+
+  filterAndRenderCpos();
+}
+
+function filterAndRenderCpos() {
+  let list = currentCpos || [];
+
+  // Search filter
+  if (cpoSearchTerm) {
+    list = list.filter(c =>
+      (c.fileRefNumber || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.consigneeName || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.blNumber || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.bank || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.type || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.remarks || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.purpose || '').toLowerCase().includes(cpoSearchTerm) ||
+      (c.returnedTo || '').toLowerCase().includes(cpoSearchTerm)
+    );
+  }
+
+  // Bank filter
+  if (cpoFilterBank !== 'ALL') {
+    list = list.filter(c => (c.bank || '').toLowerCase().includes(cpoFilterBank.toLowerCase()));
+  }
+
+  // Status filter
+  if (cpoFilterStatus !== 'ALL') {
+    list = list.filter(c => c.status === cpoFilterStatus);
+  }
+
+  // Type filter
+  if (cpoFilterType !== 'ALL') {
+    list = list.filter(c => (c.type || '') === cpoFilterType);
+  }
+
+  filteredCposList = list;
+  renderCpoTable(filteredCposList);
+}
+
+function changeCpoPageSize(newSize) {
+  cpoPageSize = newSize;
+  cpoCurrentPage = 1;
+  filterAndRenderCpos();
+}
+
+function setCpoPage(pageNum) {
+  cpoCurrentPage = pageNum;
+  filterAndRenderCpos();
 }
 
 function renderCpoTable(cpos) {
@@ -858,10 +1189,32 @@ function renderCpoTable(cpos) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const countEl = document.getElementById('cpoEntriesCount');
-  if (countEl) countEl.textContent = `Showing ${cpos.length} CPO & deposit records`;
+  const total = cpos.length;
+  const pageSize = cpoPageSize === 'ALL' ? total || 1 : Number(cpoPageSize);
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  if (cpoCurrentPage > totalPages) cpoCurrentPage = totalPages;
+  if (cpoCurrentPage < 1) cpoCurrentPage = 1;
 
-  cpos.forEach((cpo, index) => {
+  const startIndex = (cpoCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, total);
+  const pageItems = cpos.slice(startIndex, endIndex);
+
+  const countEl = document.getElementById('cpoEntriesCount');
+  if (countEl) {
+    countEl.textContent = total > 0
+      ? `Showing ${startIndex + 1} to ${endIndex} of ${total} records`
+      : 'Showing 0 of 0 records';
+  }
+
+  renderPaginationControls('cpoPaginationControls', cpoCurrentPage, totalPages, 'setCpoPage');
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400 italic">No CPO guarantee or deposit records found matching your filters.</td></tr>`;
+    refreshIcons();
+    return;
+  }
+
+  pageItems.forEach((cpo, index) => {
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition';
 
@@ -883,7 +1236,7 @@ function renderCpoTable(cpos) {
       : `<span class="text-[11px] text-slate-400 italic">Held in Vault</span>`;
 
     tr.innerHTML = `
-      <td class="text-center font-bold text-slate-400 text-xs">${index + 1}</td>
+      <td class="text-center font-bold text-slate-400 text-xs">${startIndex + index + 1}</td>
       <td>
         <span class="font-extrabold text-sky-800 text-xs cursor-pointer hover:underline" onclick="loadJobCockpit('${cpo.jobId}')">${cpo.fileRefNumber}</span>
       </td>
@@ -907,32 +1260,6 @@ function renderCpoTable(cpos) {
   });
 
   refreshIcons();
-}
-
-function filterCpoByBank(bank) {
-  currentCpoBankFilter = bank;
-  ['ALL', 'Abyssinia', 'Ethiopia', 'Awash', 'Abukii'].forEach(b => {
-    const btn = document.getElementById(`cpo-bank-${b}`);
-    if (btn) {
-      btn.className = b === bank
-        ? 'px-2.5 py-1 text-xs font-bold rounded bg-[#0284c7] text-white'
-        : 'px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200';
-    }
-  });
-  loadCpoTable();
-}
-
-function filterCpoByStatus(status) {
-  currentCpoStatusFilter = status;
-  ['ALL', 'HELD', 'RETURNED'].forEach(s => {
-    const btn = document.getElementById(`cpo-status-${s}`);
-    if (btn) {
-      btn.className = s === status
-        ? 'px-2.5 py-0.5 rounded bg-slate-800 text-white'
-        : 'px-2.5 py-0.5 rounded text-slate-600 hover:bg-slate-100';
-    }
-  });
-  loadCpoTable();
 }
 
 function exportCpoTableToCSV() {
@@ -971,6 +1298,7 @@ function switchCockpitTab(tabName) {
 
 function filterTab(tab) {
   currentTabFilter = tab;
+  jobsCurrentPage = 1;
   ['all', 'active', 'cleared'].forEach(t => {
     const btn = document.getElementById(`tab-${t}`);
     if (btn) {
@@ -991,6 +1319,7 @@ function applyFilters() {
   if (search) query += `search=${encodeURIComponent(search)}&`;
   if (port) query += `port=${encodeURIComponent(port)}`;
 
+  jobsCurrentPage = 1;
   loadJobsTable(query);
 }
 
@@ -999,18 +1328,15 @@ function resetFilters() {
   document.getElementById('filterTin').value = '';
   document.getElementById('filterBl').value = '';
   document.getElementById('filterPort').value = 'ALL';
+  const quickSearch = document.getElementById('tableQuickSearch');
+  if (quickSearch) quickSearch.value = '';
+  jobsCurrentPage = 1;
   loadJobsTable();
 }
 
 function handleQuickSearch(e) {
-  const q = e.target.value.toLowerCase();
-  const filtered = currentJobs.filter(j => 
-    j.fileRefNumber.toLowerCase().includes(q) ||
-    (j.consignee?.name || '').toLowerCase().includes(q) ||
-    (j.blNumber || '').toLowerCase().includes(q) ||
-    (j.containerNumber || '').toLowerCase().includes(q)
-  );
-  renderJobsTable(filtered);
+  jobsCurrentPage = 1;
+  renderJobsTable(currentJobs);
 }
 
 function closeModal(modalId) {
