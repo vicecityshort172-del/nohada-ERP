@@ -72,6 +72,50 @@ function readDB() {
   }
 }
 
+async function syncRelationalTables(data) {
+  if (!pgPool || !pgConnected || !data) return;
+  try {
+    // 1. Update master state
+    await pgPool.query(
+      'INSERT INTO erp_state (id, data, updated_at) VALUES (1, $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()',
+      [JSON.stringify(data)]
+    );
+
+    // 2. Sync Jobs & child tables
+    if (Array.isArray(data.jobs)) {
+      for (const j of data.jobs) {
+        await pgPool.query(
+          `INSERT INTO jobs (
+            id, file_ref_number, consignee_name, consignee_tin, consignee_phone, consignee_address,
+            assigned_staff, status, status_step, operation_port, bl_number, shipping_line,
+            vessel_name, voyage_number, origin_port, destination_port, delivery_terms, cargo_description,
+            package_qty, package_type, gross_weight_kg, tare_weight_kg, cbm, container_number,
+            container_type, seal_number, free_days_remaining, declaration_data, raw_data
+          ) VALUES (
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29
+          ) ON CONFLICT (id) DO UPDATE SET
+            file_ref_number = EXCLUDED.file_ref_number,
+            consignee_name = EXCLUDED.consignee_name,
+            status = EXCLUDED.status,
+            status_step = EXCLUDED.status_step,
+            free_days_remaining = EXCLUDED.free_days_remaining,
+            declaration_data = EXCLUDED.declaration_data,
+            raw_data = EXCLUDED.raw_data`,
+          [
+            j.id, j.fileRefNumber || j.id, j.consignee ? j.consignee.name : null, j.consignee ? j.consignee.tin : null, j.consignee ? j.consignee.phone : null, j.consignee ? j.consignee.address : null,
+            j.assignedStaff, j.status, j.statusStep || 1, j.operationPort, j.blNumber, j.shippingLine,
+            j.vesselName, j.voyageNumber, j.originPort, j.destinationPort, j.deliveryTerms, j.cargoDescription,
+            j.packageQty, j.packageType, j.grossWeightKg, j.tareWeightKg, j.cbm, j.containerNumber,
+            j.containerType, j.sealNumber, j.freeDaysRemaining, JSON.stringify(j.declaration || {}), JSON.stringify(j)
+          ]
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Relational sync error:', e.message);
+  }
+}
+
 // Helper to write database
 function writeDB(data) {
   memoryCache = data;
@@ -83,10 +127,7 @@ function writeDB(data) {
 
   // Persist asynchronously to PostgreSQL if connected
   if (pgPool && pgConnected) {
-    pgPool.query(
-      'INSERT INTO erp_state (id, data, updated_at) VALUES (1, $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()',
-      [JSON.stringify(data)]
-    ).catch(err => {
+    syncRelationalTables(data).catch(err => {
       console.error('Error persisting to PostgreSQL:', err.message);
     });
   }
