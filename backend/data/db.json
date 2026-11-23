@@ -115,8 +115,8 @@
           "code": "034",
           "name": "Insurance Cost Voucher",
           "ref": "INS-PENDING",
-          "date": null,
-          "status": "missing"
+          "date": "2026-11-23",
+          "status": "verified"
         },
         {
           "code": "DEC",
