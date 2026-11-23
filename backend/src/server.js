@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // PostgreSQL Configuration
-const DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:ZBXgLFndIQXgmpJgeEMRzzHDMlhLSvoy@postgres.railway.internal:5432/railway";
+const DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:ZBXgLFndIQXgmpJgeEMRzzHDMlhLSvoy@switchback.proxy.rlwy.net:33577/railway";
 let pgPool = null;
 let pgConnected = false;
 let memoryCache = null;
