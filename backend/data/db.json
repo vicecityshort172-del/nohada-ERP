@@ -1,0 +1,754 @@
+{
+  "company": {
+    "name": "NOHADA TRADING PLC",
+    "systemTitle": "LOGISTICS & CUSTOMS CLEARING ERP",
+    "location": "Addis Ababa, Mercato Ras Sosa Building, Office #304",
+    "phone": "+251 91 152 5317 / +251 95 144 8395",
+    "tin": "0097470800",
+    "activeStaff": "Imran (Operations Head)"
+  },
+  "stats": {
+    "activeJobFiles": 7,
+    "activeCount": 5,
+    "clearedCount": 2,
+    "totalCpoGuarantees": 3450000,
+    "cpoHeldCount": 5,
+    "cpoReturnedCount": 2,
+    "containersInTransit": 18,
+    "transitMojo": 12,
+    "transitKality": 4,
+    "transitDjibouti": 2,
+    "totalDisbursed": 801067
+  },
+  "demurrageAlerts": [
+    {
+      "id": "alert-1",
+      "fileRef": "ABM00240/26",
+      "container": "TEMU3176663",
+      "consignee": "Bilal Sadik Yasin",
+      "port": "Mojo Dry Port (MOJ)",
+      "freeDaysRemaining": 2,
+      "status": "CRITICAL",
+      "message": "Only 2 free detention days remaining! Empty box must be returned to avoid CMA CGM demurrage penalty."
+    }
+  ],
+  "jobs": [
+    {
+      "id": "2345",
+      "fileRefNumber": "2345",
+      "consignee": {
+        "name": "yonas",
+        "tin": "4354",
+        "phone": "654634565",
+        "address": "Addis Ababa",
+        "customerRep": "yonas"
+      },
+      "assignedStaff": "Imran (0911525317)",
+      "status": "In Transit",
+      "statusStep": 2,
+      "operationPort": "MOJ",
+      "blNumber": "2345",
+      "shippingLine": "CMA CGM",
+      "vesselName": "CMA CGM BAHIA",
+      "voyageNumber": "0RDAW1MA",
+      "originPort": "Nansha Pt (China)",
+      "destinationPort": "MOJ Dry Port",
+      "deliveryTerms": "FOB",
+      "cargoDescription": "General Commercial Cargo",
+      "packageQty": 100,
+      "packageType": "Packages (PK)",
+      "grossWeightKg": 10500,
+      "tareWeightKg": 2180,
+      "cbm": 28,
+      "containerNumber": "4234345",
+      "containerType": "1*20' GP",
+      "sealNumber": "SEAL-7886136",
+      "freeDaysRemaining": 14,
+      "declaration": {
+        "decRequestDate": "2026-11-23",
+        "decNumber": "Pending Dec",
+        "decDate": null,
+        "customsTaxTotal": 0,
+        "transitPermitted": true,
+        "emptyGuaranteeApproved": false
+      },
+      "deposits": [
+        {
+          "id": "dep-1795422622832",
+          "date": "2026-11-23",
+          "amount": 546789,
+          "type": "Bank Transfer",
+          "bank": "Bank of Abyssinia (BOA)",
+          "category": "OPERATIONAL_CASH",
+          "purpose": "Initial Shipment Deposit",
+          "status": "ACTIVE",
+          "returnedTo": null,
+          "returnDate": null,
+          "remarks": "Registered upon file opening"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-1795422675970",
+          "date": "2026-11-23",
+          "category": "Other",
+          "description": "ytu",
+          "amount": 67,
+          "paidTo": "sr",
+          "receiptNo": "RCP-5740"
+        }
+      ],
+      "documents": [
+        {
+          "code": "001",
+          "name": "Import Licence",
+          "ref": "Verified in eCMS",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "004",
+          "name": "Commercial Invoice",
+          "ref": "INV-2345",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "005",
+          "name": "Packing List",
+          "ref": "PL-2345",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "006",
+          "name": "Bill of Lading",
+          "ref": "2345",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "007",
+          "name": "Certificate of Origin",
+          "ref": "CO-CN",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "008",
+          "name": "Bank Permit / Debit Advice",
+          "ref": "BP-PENDING",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "034",
+          "name": "Insurance Cost Voucher",
+          "ref": "INS-PENDING",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "DEC",
+          "name": "Customs Assessment Notice",
+          "ref": "Assessment Pending",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "GRN",
+          "name": "Guarantee Letter for Empty Return",
+          "ref": "Pending Approval",
+          "date": "2026-11-23",
+          "status": "verified"
+        },
+        {
+          "code": "INT",
+          "name": "Empty Container Interchange Receipt",
+          "ref": "Pending Return",
+          "date": "2026-11-23",
+          "status": "verified"
+        }
+      ]
+    },
+    {
+      "id": "ABM00240-26",
+      "fileRefNumber": "ABM00240/26",
+      "consignee": {
+        "name": "Bilal Sadik Yasin",
+        "tin": "0107735519",
+        "phone": "0951448385",
+        "address": "Addis Ababa Kolfe Keraniyo Woreda 07, New",
+        "customerRep": "Bilal (Owner)"
+      },
+      "assignedStaff": "Imran (0911525317)",
+      "status": "Cleared",
+      "statusStep": 6,
+      "operationPort": "MOJ",
+      "blNumber": "ZSN0899042",
+      "shippingLine": "CMA CGM",
+      "vesselName": "CMA CGM BAHIA",
+      "voyageNumber": "0RDAW1MA",
+      "originPort": "Nansha Pt (China)",
+      "destinationPort": "Mojo Dry Port via Dewele (DDL02)",
+      "deliveryTerms": "FOB",
+      "cargoDescription": "Ready Made Garment",
+      "packageQty": 93,
+      "packageType": "Packages (PK)",
+      "grossWeightKg": 9600,
+      "tareWeightKg": 2180,
+      "cbm": 28,
+      "containerNumber": "TEMU3176663",
+      "containerType": "1*20' GP",
+      "sealNumber": "J3146427",
+      "freeDaysRemaining": 2,
+      "declaration": {
+        "decRequestDate": "2026-11-19",
+        "decNumber": "4-25530/2026",
+        "decDate": "2026-11-20",
+        "assessmentNumber": "A-27904",
+        "receiptNumber": "MOJ00-R-59983",
+        "receiptDate": "2026-11-21",
+        "paymentMode": "CASH",
+        "taxBreakdown": {
+          "customsTax": 114552.9,
+          "exciseTax": 20987.75,
+          "surtax": 46283.4,
+          "socialWelfareTax": 0,
+          "vat": 76367.85,
+          "withholdingTax": 9818.82,
+          "totalTaxPaid": 268010.72
+        },
+        "transitPermitted": true,
+        "emptyGuaranteeApproved": true
+      },
+      "deposits": [
+        {
+          "id": "dep-1",
+          "date": "2026-11-10",
+          "amount": 385000,
+          "type": "CPO Guarantee",
+          "bank": "Bank of Abyssinia (BOA)",
+          "category": "GUARANTEE_CPO",
+          "purpose": "Container Empty Return Guarantee",
+          "status": "HELD",
+          "returnedTo": null,
+          "returnDate": null,
+          "remarks": "Interchange document verified returned; CPO handed over"
+        },
+        {
+          "id": "dep-2",
+          "date": "2026-11-12",
+          "amount": 200000,
+          "type": "Bank Transfer",
+          "bank": "Abukii Bank",
+          "category": "OPERATIONAL_CASH",
+          "purpose": "Transport & Port Clearance Advance",
+          "status": "ACTIVE",
+          "returnedTo": null,
+          "returnDate": null,
+          "remarks": "Customer operating advance funds"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-1",
+          "date": "2026-11-15",
+          "category": "Transport",
+          "description": "Djibouti to Mojo Dry Port Truck Freight",
+          "amount": 146500,
+          "paidTo": "Ethio-Djibouti Truck Association / Driver",
+          "receiptNo": "TRK-9842"
+        },
+        {
+          "id": "exp-2",
+          "date": "2026-11-16",
+          "category": "Djibouti Port & Transit",
+          "description": "Djibouti Port Terminal Handling & Service Fee",
+          "amount": 33500,
+          "paidTo": "Djibouti Transit Partner (Badr)",
+          "receiptNo": "DJ-5510"
+        },
+        {
+          "id": "exp-3",
+          "date": "2026-11-20",
+          "category": "Service Charge",
+          "description": "Nohada Customs Clearing Agency Fee",
+          "amount": 23000,
+          "paidTo": "Nohada Trading PLC",
+          "receiptNo": "NOH-INV-0240"
+        }
+      ],
+      "documents": [
+        {
+          "code": "001",
+          "name": "Import Licence",
+          "ref": "MT/AA/14/667/50460652/2018",
+          "date": "2026-11-04",
+          "status": "verified"
+        },
+        {
+          "code": "004",
+          "name": "Commercial Invoice",
+          "ref": "ST/BS/0311/26A",
+          "date": "2026-11-23",
+          "status": "missing"
+        },
+        {
+          "code": "005",
+          "name": "Packing List",
+          "ref": "ST/BS/0311/26A",
+          "date": "2026-11-18",
+          "status": "verified"
+        },
+        {
+          "code": "006",
+          "name": "Bill of Lading",
+          "ref": "ZSN0899042",
+          "date": "2026-11-23",
+          "status": "missing"
+        },
+        {
+          "code": "007",
+          "name": "Certificate of Origin",
+          "ref": "26C661120277/11461",
+          "date": "2026-11-17",
+          "status": "verified"
+        },
+        {
+          "code": "008",
+          "name": "Bank Permit / Debit Advice",
+          "ref": "RMBTSD01012792026",
+          "date": "2026-11-23",
+          "status": "missing"
+        },
+        {
+          "code": "034",
+          "name": "Insurance Cost Voucher",
+          "ref": "BISC2611681698",
+          "date": "2026-11-05",
+          "status": "verified"
+        },
+        {
+          "code": "DEC",
+          "name": "Customs Assessment Notice",
+          "ref": "MOJ00-R-59983 (268,010.72 ETB)",
+          "date": "2026-11-23",
+          "status": "missing"
+        },
+        {
+          "code": "GRN",
+          "name": "Guarantee Letter for Empty Return",
+          "ref": "eCMS Officer Approved",
+          "date": "2026-11-21",
+          "status": "verified"
+        },
+        {
+          "code": "INT",
+          "name": "Empty Container Interchange Receipt",
+          "ref": "Pending Return from Djibouti",
+          "date": "2026-11-23",
+          "status": "missing"
+        }
+      ]
+    },
+    {
+      "id": "ABM00241-26",
+      "fileRefNumber": "ABM00241/26",
+      "consignee": {
+        "name": "Wesen Ahmed",
+        "tin": "0108994512",
+        "phone": "0913874617",
+        "customerRep": "Seid / 0913874617"
+      },
+      "assignedStaff": "Tofik (0911874411)",
+      "status": "Customs Check",
+      "statusStep": 4,
+      "operationPort": "KAL",
+      "blNumber": "EGLV143253257702",
+      "shippingLine": "Evergreen Line",
+      "cargoDescription": "Industrial Hardware & Tools",
+      "packageQty": 140,
+      "grossWeightKg": 18400,
+      "containerNumber": "EGLU9948123",
+      "containerType": "1*40' HQ",
+      "sealNumber": "EG488192",
+      "freeDaysRemaining": 6,
+      "declaration": {
+        "decNumber": "4-986",
+        "decDate": "2026-11-14",
+        "customsTaxTotal": 412500
+      },
+      "deposits": [
+        {
+          "id": "dep-241-1",
+          "date": "2026-11-08",
+          "amount": 385000,
+          "type": "CPO Guarantee",
+          "bank": "Commercial Bank of Ethiopia (CBE)",
+          "category": "GUARANTEE_CPO",
+          "status": "RETURNED",
+          "returnedTo": "Yeshak (Customer Representative)",
+          "returnDate": "2026-11-23",
+          "remarks": "Interchange empty return document verified from Djibouti; guarantee released."
+        },
+        {
+          "id": "dep-241-2",
+          "date": "2026-11-10",
+          "amount": 250000,
+          "type": "Bank Transfer",
+          "bank": "Gulf Badr Group",
+          "category": "OPERATIONAL_CASH",
+          "status": "ACTIVE"
+        },
+        {
+          "id": "dep-1795421413948",
+          "date": "2026-11-23",
+          "amount": 60000,
+          "type": "Bank Transfer",
+          "bank": "Commercial Bank of Ethiopia (CBE)",
+          "category": "GUARANTEE_CPO",
+          "purpose": "1*20 conitiner",
+          "status": "HELD",
+          "returnedTo": null,
+          "returnDate": null,
+          "remarks": ""
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-241-1",
+          "date": "2026-11-14",
+          "category": "Transport",
+          "description": "Djibouti to Kality Freight",
+          "amount": 175000
+        },
+        {
+          "id": "exp-241-2",
+          "date": "2026-11-15",
+          "category": "Djibouti Port",
+          "description": "Port charges & handling",
+          "amount": 42000
+        }
+      ]
+    },
+    {
+      "id": "ABM00242-26",
+      "fileRefNumber": "ABM00242/26",
+      "consignee": {
+        "name": "Said Jemal",
+        "tin": "0105441890",
+        "phone": "0938542494",
+        "customerRep": "Hamid / 0938542494"
+      },
+      "assignedStaff": "Sofia (0911762234)",
+      "status": "At Djibouti",
+      "statusStep": 2,
+      "operationPort": "MOJ",
+      "blNumber": "MAEU224549004",
+      "shippingLine": "Maersk Line",
+      "cargoDescription": "Fabrics & Textile Rolls",
+      "packageQty": 210,
+      "grossWeightKg": 14200,
+      "containerNumber": "MSKU4491029",
+      "containerType": "1*20' GP",
+      "freeDaysRemaining": 11,
+      "declaration": {
+        "decNumber": "4-238",
+        "decDate": null
+      },
+      "deposits": [
+        {
+          "id": "dep-242-1",
+          "date": "2026-11-02",
+          "amount": 300000,
+          "type": "CPO Guarantee",
+          "bank": "Bank of Abyssinia (BOA)",
+          "category": "GUARANTEE_CPO",
+          "status": "HELD"
+        },
+        {
+          "id": "dep-242-2",
+          "date": "2026-11-04",
+          "amount": 200000,
+          "type": "Cash",
+          "bank": "Abukii Bank",
+          "category": "OPERATIONAL_CASH",
+          "status": "ACTIVE"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-242-1",
+          "date": "2026-11-06",
+          "category": "Djibouti Port",
+          "description": "Djibouti Port storage & documentation",
+          "amount": 38000
+        }
+      ]
+    },
+    {
+      "id": "ABM00243-26",
+      "fileRefNumber": "ABM00243/26",
+      "consignee": {
+        "name": "Baharu Hussain",
+        "tin": "0109923314",
+        "phone": "0929119588",
+        "customerRep": "Abdurahim / 0912506311"
+      },
+      "assignedStaff": "Imran (0911525317)",
+      "status": "Doc Missing",
+      "statusStep": 1,
+      "operationPort": "MOJ",
+      "blNumber": "EGLV147300081263",
+      "shippingLine": "Evergreen Line",
+      "cargoDescription": "Footwear & Accessories",
+      "packageQty": 315,
+      "grossWeightKg": 11500,
+      "containerNumber": "EGLU1094821",
+      "containerType": "1*20' GP",
+      "freeDaysRemaining": 14,
+      "declaration": {
+        "decNumber": "4-1540",
+        "decDate": null
+      },
+      "deposits": [
+        {
+          "id": "dep-243-1",
+          "date": "2026-11-11",
+          "amount": 195000,
+          "type": "CPO Guarantee",
+          "bank": "Awash Bank",
+          "category": "GUARANTEE_CPO",
+          "status": "HELD"
+        }
+      ],
+      "expenses": []
+    },
+    {
+      "id": "ABM00244-26",
+      "fileRefNumber": "ABM00244/26",
+      "consignee": {
+        "name": "Hamdu Dula",
+        "tin": "0103321980",
+        "phone": "0962309730",
+        "customerRep": "Hamdu"
+      },
+      "assignedStaff": "Imran (0911525317)",
+      "status": "In Transit",
+      "statusStep": 3,
+      "operationPort": "MOJ",
+      "blNumber": "EGLV149301838305",
+      "shippingLine": "Evergreen Line",
+      "cargoDescription": "Home Appliances & Electronics",
+      "packageQty": 85,
+      "grossWeightKg": 8900,
+      "containerNumber": "EGLU3391820",
+      "containerType": "1*20' GP",
+      "freeDaysRemaining": 4,
+      "declaration": {
+        "decNumber": "4-1522",
+        "decDate": "2026-11-18"
+      },
+      "deposits": [
+        {
+          "id": "dep-244-1",
+          "date": "2026-11-09",
+          "amount": 195500,
+          "type": "CPO Guarantee",
+          "bank": "NIB Bank",
+          "category": "GUARANTEE_CPO",
+          "status": "HELD"
+        },
+        {
+          "id": "dep-244-2",
+          "date": "2026-11-11",
+          "amount": 180000,
+          "type": "Bank Transfer",
+          "bank": "Gulf Badr Group",
+          "category": "OPERATIONAL_CASH",
+          "status": "ACTIVE"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-244-1",
+          "date": "2026-11-15",
+          "category": "Transport",
+          "description": "Djibouti to Mojo Trucking",
+          "amount": 140000
+        }
+      ]
+    },
+    {
+      "id": "ABM00245-26",
+      "fileRefNumber": "ABM00245/26",
+      "consignee": {
+        "name": "Sign A Garment Factory PLC",
+        "tin": "0102441982",
+        "phone": "0900669414",
+        "customerRep": "Yeshak / 0900669414"
+      },
+      "assignedStaff": "Sofia (0911762234)",
+      "status": "Cleared",
+      "statusStep": 7,
+      "operationPort": "MOJ",
+      "blNumber": "EGLV147300156752",
+      "shippingLine": "Evergreen Line",
+      "cargoDescription": "Garment Sewing Threads & Needles",
+      "packageQty": 180,
+      "grossWeightKg": 7600,
+      "containerNumber": "EGLU4419082",
+      "containerType": "1*20' GP",
+      "freeDaysRemaining": 14,
+      "declaration": {
+        "decNumber": "4-1857",
+        "decDate": "2026-11-16",
+        "customsTaxTotal": 198000
+      },
+      "deposits": [
+        {
+          "id": "dep-245-1",
+          "date": "2026-11-05",
+          "amount": 385000,
+          "type": "CPO Guarantee",
+          "bank": "Bank of Abyssinia (BOA)",
+          "category": "GUARANTEE_CPO",
+          "status": "RETURNED",
+          "returnedTo": "Yeshak",
+          "returnDate": "2026-11-22",
+          "remarks": "Interchange document received from Djibouti; CPO successfully returned"
+        },
+        {
+          "id": "dep-245-2",
+          "date": "2026-11-05",
+          "amount": 250000,
+          "type": "Bank Transfer",
+          "bank": "Bank of Abyssinia (BOA)",
+          "category": "OPERATIONAL_CASH",
+          "status": "ACTIVE"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-245-1",
+          "date": "2026-11-10",
+          "category": "Transport",
+          "description": "Djibouti to Mojo Transport",
+          "amount": 146500
+        },
+        {
+          "id": "exp-245-2",
+          "date": "2026-11-12",
+          "category": "Djibouti Port",
+          "description": "Port & Handling Fee",
+          "amount": 33500
+        },
+        {
+          "id": "exp-245-3",
+          "date": "2026-11-18",
+          "category": "Service Charge",
+          "description": "Nohada Clearing Fee",
+          "amount": 23000
+        }
+      ]
+    }
+  ],
+  "taxEstimatorDefaults": {
+    "exchangeRate": 125.5,
+    "items": [
+      {
+        "id": 1,
+        "description": "MEN TRACK JACKET",
+        "qty": 600,
+        "unitPriceUsd": 7.22,
+        "fobUsd": 4332,
+        "freightEtb": 33704.57,
+        "insuranceEtb": 35.2,
+        "otherEtb": 9929.54,
+        "dpvEtb": 738815.39,
+        "dutyEtb": 258585.38,
+        "exciseEtb": 49870.03,
+        "surtaxEtb": 104727.08,
+        "vatEtb": 149364.55,
+        "whtEtb": 22164.46,
+        "totalTaxEtb": 608737.76
+      },
+      {
+        "id": 2,
+        "description": "MEN JACKET",
+        "qty": 5530,
+        "unitPriceUsd": 9.03,
+        "fobUsd": 49935.9,
+        "freightEtb": 388519.95,
+        "insuranceEtb": 405.78,
+        "otherEtb": 114459.98,
+        "dpvEtb": 8516484.74,
+        "dutyEtb": 2980769.66,
+        "exciseEtb": 574862.72,
+        "surtaxEtb": 1207211.12,
+        "vatEtb": 1722312.45,
+        "whtEtb": 255494.54,
+        "totalTaxEtb": 7017014.15
+      },
+      {
+        "id": 3,
+        "description": "MEN VEST",
+        "qty": 420,
+        "unitPriceUsd": 6.52,
+        "fobUsd": 2738.4,
+        "freightEtb": 21305.77,
+        "insuranceEtb": 22.25,
+        "otherEtb": 6276.79,
+        "dpvEtb": 467029.56,
+        "dutyEtb": 163460.34,
+        "exciseEtb": 31524.49,
+        "surtaxEtb": 66201.41,
+        "vatEtb": 94458.2,
+        "whtEtb": 14010.89,
+        "totalTaxEtb": 384803.17
+      },
+      {
+        "id": 4,
+        "description": "MEN PANT",
+        "qty": 1500,
+        "unitPriceUsd": 5.89,
+        "fobUsd": 8835,
+        "freightEtb": 68739.6,
+        "insuranceEtb": 71.79,
+        "otherEtb": 20251.04,
+        "dpvEtb": 1506794.56,
+        "dutyEtb": 527378.09,
+        "exciseEtb": 101708.63,
+        "surtaxEtb": 213588.12,
+        "vatEtb": 304724.8,
+        "whtEtb": 45203.84,
+        "totalTaxEtb": 1241504.55
+      },
+      {
+        "id": 5,
+        "description": "MEN SOCKS",
+        "qty": 1500,
+        "unitPriceUsd": 5.33,
+        "fobUsd": 7995,
+        "freightEtb": 62204.08,
+        "insuranceEtb": 64.96,
+        "otherEtb": 18325.64,
+        "dpvEtb": 1363533.96,
+        "dutyEtb": 477236.88,
+        "exciseEtb": 92038.54,
+        "surtaxEtb": 193280.39,
+        "vatEtb": 275765.35,
+        "whtEtb": 40906.02,
+        "totalTaxEtb": 1123466.76
+      }
+    ],
+    "grandTotalDpv": 12592658.24,
+    "grandTotalDuty": 4407430.38,
+    "grandTotalExcise": 850004.43,
+    "grandTotalSurtax": 1785093.05,
+    "grandTotalVat": 2546625.35,
+    "grandTotalWht": 377779.74,
+    "grandTotalTaxEtb": 10375563.35
+  }
+}

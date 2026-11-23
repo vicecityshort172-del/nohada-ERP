@@ -1,0 +1,17 @@
+{
+  "name": "nohada-trading-erp",
+  "version": "1.0.0",
+  "description": "Nohada Trading PLC - Customs Clearing, Inland Freight & Multi-Bank CPO Registry ERP",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node backend/src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

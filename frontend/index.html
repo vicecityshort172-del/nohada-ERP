@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nohada Trading PLC - Logistics & CPO Settlement ERP</title>
+  <!-- Tailwind CSS CDN for high-density modern enterprise utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandSidebar: '#0c1829',
+            brandActive: '#0084d1',
+            brandBlue: '#0284c7',
+            brandTeal: '#0d9488',
+            brandOrange: '#c2410c',
+            brandRed: '#be123c',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="mobileSidebarBackdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
+
+  <!-- ========================================================================= -->
+  <!-- SIDEBAR (Dark Black Theme, 280px, Responsive Off-Canvas / Desktop Sticky) -->
+  <!-- ========================================================================= -->
+  <aside id="appSidebar" class="sidebar flex flex-col justify-between flex-shrink-0 h-screen -translate-x-full lg:translate-x-0 overflow-y-auto">
+    <div>
+      <!-- Brand Logo Header -->
+      <div class="p-4 flex items-center justify-between border-b border-slate-800/80">
+        <div class="flex items-center gap-3">
+          <div class="sidebar-logo-box">
+            <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-white font-extrabold text-sm tracking-wider uppercase">Nohada Trading</span>
+            <span class="text-sky-400 font-bold text-[10px] tracking-wider uppercase">Logistics & ERP</span>
+          </div>
+        </div>
+        <!-- Close button for mobile -->
+        <button onclick="toggleMobileSidebar(false)" class="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg transition" title="Close Menu">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="py-3">
+        <!-- 1. Executive Operations Dashboard -->
+        <a href="#dashboard" onclick="switchView('dashboard')" id="nav-dashboard" class="sidebar-nav-item active">
+          <i data-lucide="gauge" class="w-4 h-4"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <!-- WORKSHOP / OPERATIONS SECTION -->
+        <div class="sidebar-subhead">Operations & Clearing</div>
+        
+        <!-- 2. Job Files (Digital Blue Jackets) -->
+        <a href="#jobs" onclick="switchView('jobs')" id="nav-jobs" class="sidebar-nav-item">
+          <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+          <span>Job Files Registry</span>
+        </a>
+
+        <!-- 2b. Open New Blue File Jacket -->
+        <a href="#newjob" onclick="switchView('newjob')" id="nav-newjob" class="sidebar-nav-item">
+          <i data-lucide="folder-plus" class="w-4 h-4"></i>
+          <span>New Job File</span>
+        </a>
+
+        <!-- 3. CPO Guarantees Registry -->
+        <a href="#cpo" onclick="switchView('cpo')" id="nav-cpo" class="sidebar-nav-item">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+          <span>CPO Guarantees</span>
+        </a>
+
+        <!-- 4. Customs Duty & Tax Estimator -->
+        <a href="#tax" onclick="switchView('tax')" id="nav-tax" class="sidebar-nav-item">
+          <i data-lucide="calculator" class="w-4 h-4"></i>
+          <span>Customs Tax Estimator</span>
+        </a>
+
+        <!-- ACTIVE SHIPMENT FOCUS SECTION -->
+        <div class="sidebar-subhead">Active Shipment Focus</div>
+
+        <!-- 5. Active File Cockpit -->
+        <a href="#cockpit" onclick="loadJobCockpit(activeCockpitJob ? activeCockpitJob.id : 'ABM00240-26')" id="nav-cockpit" class="sidebar-nav-item">
+          <i data-lucide="file-check-2" class="w-4 h-4"></i>
+          <span id="sidebarCockpitText">File Cockpit</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="p-3.5 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between bg-slate-900/40">
+      <span>Mercato Ras Sosa #304</span>
+      <span class="text-sky-400 font-bold">v2.4.0</span>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE CONTENT (Scrolls Independently) -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-50">
+
+    <!-- TOP NAVBAR (Responsive with 3-bar Hamburger Menu) -->
+    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+      <div class="flex items-center gap-3">
+        <!-- 3-Bar Hamburger Menu Button for Small Devices -->
+        <button id="mobileMenuBtn" onclick="toggleMobileSidebar(true)" class="lg:hidden p-1.5 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Open Navigation Menu">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span class="hover:text-slate-800 cursor-pointer hidden sm:inline" onclick="switchView('dashboard')">Home</span>
+          <span class="hidden sm:inline">/</span>
+          <span id="breadcrumbCurrent" class="text-slate-900 font-bold truncate max-w-[180px] sm:max-w-none">Dashboard</span>
+        </div>
+      </div>
+
+      <!-- User Profile (Wise Digital Admin Style) -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-[#0284c7] text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+          I
+        </div>
+        <div class="flex flex-col text-left leading-tight hidden sm:flex">
+          <span class="text-xs font-bold text-slate-800">Imran (Operations)</span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ADMIN / DISPATCH</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 1: MAIN OPERATIONS DASHBOARD (Clean Wise Digital Style) -->
+      <!-- ===================================================================== -->
+      <div id="view-dashboard" class="space-y-6">
+        
+        <!-- Page Title & Header Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Operations & Settlement Overview</h1>
+            <p class="text-xs text-slate-500 mt-1">Nohada Trading PLC • Customs Clearing, Inland Freight & Multi-Bank Settlement System</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openDepositModal()" class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>New Deposit / CPO</span>
+            </button>
+            <button onclick="switchView('newjob')" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+              <span>New Job File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- YELLOW WARNING ALERT (Subtle Clean Wise Digital Style) -->
+        <div class="bg-amber-50/90 border border-amber-200 text-amber-900 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-200/60 flex items-center justify-center flex-shrink-0 text-amber-900">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="font-bold text-xs uppercase tracking-wider text-amber-900">Demurrage Deadline Alert:</span>
+              <span class="text-xs text-amber-800 ml-1">Container <strong>TEMU3176663</strong> (Bilal Sadik Yasin) has only <strong>2 free detention days</strong> remaining at Mojo Dry Port!</span>
+            </div>
+          </div>
+          <button onclick="loadJobCockpit('ABM00240-26')" class="bg-slate-900 hover:bg-black text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg whitespace-nowrap shadow-xs transition">
+            Review Free Days
+          </button>
+        </div>
+
+        <!-- 4 CLEAN WISE DIGITAL KPI CARDS (White Card + Color Accent Icon Box) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: Active Job Files -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Job Files</span>
+              <div class="w-9 h-9 rounded-lg bg-sky-50 text-[#0284c7] flex items-center justify-center">
+                <i data-lucide="folder" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div class="text-3xl font-extrabold text-slate-900 tracking-tight" id="kpiActiveFiles">7</div>
+              <div class="mt-2 flex items-center gap-2 text-xs">
+                <span class="bg-sky-50 text-sky-700 font-semibold px-2 py-0.5 rounded">Active: <span id="kpiActiveSub">5</span></span>
+                <span class="bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded">Cleared: <span id="kpiClearedSub">2</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: CPO Guarantees -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">CPO Guarantees</span>
+              <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div class="text-3xl font-extrabold text-slate-900 tracking-tight" id="kpiCpoTotal">3.45M <span class="text-xs font-semibold text-slate-400">ETB</span></div>
+              <div class="mt-2 flex items-center gap-2 text-xs">
+                <span class="bg-amber-50 text-amber-700 font-semibold px-2 py-0.5 rounded">Held: <span id="kpiCpoHeld">5</span></span>
+                <span class="bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded">Returned: <span id="kpiCpoReturned">2</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Transit Containers -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Transit Containers</span>
+              <div class="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                <i data-lucide="truck" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div class="text-3xl font-extrabold text-slate-900 tracking-tight" id="kpiTransitTotal">18</div>
+              <div class="mt-2 text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+                <span class="text-slate-700 font-bold">12 Mojo</span> • <span>4 Kality</span> • <span>2 Djibouti</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Total Disbursed -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Disbursed</span>
+              <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                <i data-lucide="banknote" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div class="text-2xl font-extrabold text-slate-900 tracking-tight" id="kpiTotalDisbursed">ETB 801,067</div>
+              <div class="mt-2 text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Transport, Port & Service Fees</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TWO-COLUMN ENTERPRISE SECTION: LIVE PULSE + CPO EXPOSURE -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Left Column (2 Cols): Live Recent Shipments Pulse -->
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <i data-lucide="folder-kanban" class="w-4 h-4 text-[#0284c7]"></i>
+                <h2 class="font-semibold text-sm text-[#0284c7]">Live Active Shipments (Digital Blue Jackets)</h2>
+              </div>
+              <button onclick="switchView('jobs')" class="text-xs font-semibold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition">
+                <span>View Full Registry</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="custom-table text-xs">
+                <thead>
+                  <tr>
+                    <th>FILE REF</th>
+                    <th>CONSIGNEE (CLIENT)</th>
+                    <th>PORT</th>
+                    <th>CONTAINER</th>
+                    <th>STATUS</th>
+                    <th class="text-center">COCKPIT</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentJobsBody">
+                  <!-- Injected dynamically via loadDashboardData() -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-3 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>Showing 5 latest files with active customs clearance</span>
+              <button onclick="switchView('newjob')" class="text-sky-600 font-semibold hover:underline flex items-center gap-1">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                Open New File
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column (1 Col): Multi-Bank CPO Exposure Breakdown -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-[#0284c7]"></i>
+                  <h2 class="font-semibold text-sm text-[#0284c7]">CPO Guarantee Bank Exposure</h2>
+                </div>
+                <button onclick="switchView('cpo')" class="text-xs font-semibold text-teal-600 hover:text-teal-800 flex items-center gap-1 transition">
+                  <span>Manage</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- Exposure Overview Header -->
+              <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Total Active CPO Exposure</span>
+                <div class="text-2xl font-extrabold text-slate-900 mt-1">3,450,000.00 <span class="text-xs font-bold text-slate-500">ETB</span></div>
+                <div class="mt-2 flex items-center justify-between text-xs">
+                  <span class="text-amber-700 font-bold flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> 5 Guarantees Held in Bank
+                  </span>
+                  <span class="text-emerald-700 font-bold flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 2 Handed Over
+                  </span>
+                </div>
+              </div>
+
+              <!-- Bank Rows Breakdown -->
+              <div class="p-5 space-y-3.5 text-xs">
+                <!-- BOA -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-slate-800">Bank of Abyssinia (BOA)</span>
+                    <span class="font-black text-slate-900">1,070,000 ETB</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-[#0284c7] h-2 rounded-full" style="width: 58%"></div>
+                  </div>
+                  <span class="text-[10px] text-slate-400 mt-0.5 block">2 Held Guarantees (Bilal Sadik, Said Jemal)</span>
+                </div>
+
+                <!-- CBE -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-slate-800">Commercial Bank of Ethiopia (CBE)</span>
+                    <span class="font-black text-slate-900">445,000 ETB</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-indigo-500 h-2 rounded-full" style="width: 25%"></div>
+                  </div>
+                  <span class="text-[10px] text-slate-400 mt-0.5 block">1 Held + 1 Returned (Wesen Ahmed)</span>
+                </div>
+
+                <!-- Awash -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-slate-800">Awash Bank</span>
+                    <span class="font-black text-slate-900">195,000 ETB</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-amber-500 h-2 rounded-full" style="width: 12%"></div>
+                  </div>
+                  <span class="text-[10px] text-slate-400 mt-0.5 block">1 Held Guarantee (Baharu Hussain)</span>
+                </div>
+
+                <!-- NIB -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-slate-800">NIB International Bank</span>
+                    <span class="font-black text-slate-900">195,500 ETB</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-teal-500 h-2 rounded-full" style="width: 12%"></div>
+                  </div>
+                  <span class="text-[10px] text-slate-400 mt-0.5 block">1 Held Guarantee (Hamdu Dula)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 text-center">
+              <button onclick="switchView('cpo')" class="text-xs font-semibold text-[#0284c7] hover:underline flex items-center justify-center gap-1 mx-auto">
+                <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                Open Multi-Bank CPO Registry Table
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DRY PORT CORRIDOR DISPATCH OVERVIEW (3 Clean White Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Corridor 1: Mojo Dry Port -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('MOJ')">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <span class="font-extrabold text-sm text-slate-800">Mojo Dry Port (MOJ)</span>
+              </div>
+              <span class="bg-sky-50 text-sky-800 font-bold text-[11px] px-2 py-0.5 rounded border border-sky-100">Primary Corridor</span>
+            </div>
+            <div class="mt-4 space-y-2 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>Active Containers:</span>
+                <strong class="text-slate-900 font-black text-sm">12 Containers</strong>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Key Clearance Files:</span>
+                <span class="font-bold text-sky-700">Bilal Sadik, Said Jemal, Baharu</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Corridor Route:</span>
+                <span class="text-slate-700 font-medium">Djibouti ➔ Dewele (DDL02) ➔ Mojo</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
+              <span>Filter Mojo Shipments</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+
+          <!-- Corridor 2: Kality Dry Port -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('KAL')">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-sky-500"></span>
+                <span class="font-extrabold text-sm text-slate-800">Kality Dry Port (KAL)</span>
+              </div>
+              <span class="bg-indigo-50 text-indigo-800 font-bold text-[11px] px-2 py-0.5 rounded border border-indigo-100">Addis Direct</span>
+            </div>
+            <div class="mt-4 space-y-2 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>Active Containers:</span>
+                <strong class="text-slate-900 font-black text-sm">4 Containers</strong>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Key Clearance Files:</span>
+                <span class="font-bold text-sky-700">Wesen Ahmed, Factory Shipments</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Customs Inspection:</span>
+                <span class="text-slate-700 font-medium">Addis Direct Delivery Check</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
+              <span>Filter Kality Shipments</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+
+          <!-- Corridor 3: Dewele / Djibouti -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('DDL')">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                <span class="font-extrabold text-sm text-slate-800">Dewele / Djibouti (DDL)</span>
+              </div>
+              <span class="bg-amber-50 text-amber-800 font-bold text-[11px] px-2 py-0.5 rounded border border-amber-100">Cross-Border</span>
+            </div>
+            <div class="mt-4 space-y-2 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>Cross-Border Transit:</span>
+                <strong class="text-slate-900 font-black text-sm">2 Shipments</strong>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Port Terminal:</span>
+                <span class="font-bold text-slate-700">Doraleh Container Terminal (DCT)</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Empty Return Status:</span>
+                <span class="text-emerald-700 font-bold">Interchange Receipts Pending</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
+              <span>Filter Cross-Border Shipments</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- ===================================================================== -->
+      <!-- VIEW 2: JOB FILES REGISTRY (DIGITAL BLUE JACKETS) -->
+      <!-- ===================================================================== -->
+      <div id="view-jobs" class="space-y-6 hidden">
+        
+        <!-- Page Title & Header Actions -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Job Files Registry (Digital Blue Jackets)</h1>
+            <p class="text-xs text-slate-500 mt-1">Central audit registry replacing physical file folders at Mercato Ras Sosa Building #304</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="switchView('newjob')" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Open New Job File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SEARCH AND FILTER BAR (Image 2 Style) -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3">
+            <i data-lucide="search" class="w-4 h-4 text-sky-600"></i>
+            <span>File & Consignee Quick Search</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Consignee Name</label>
+              <input type="text" id="filterConsignee" placeholder="e.g. Bilal Sadik, Wesen..." class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">TIN Number</label>
+              <input type="text" id="filterTin" placeholder="e.g. 0107735519..." class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Bill of Lading / Container</label>
+              <input type="text" id="filterBl" placeholder="e.g. ZSN0899042, TEMU..." class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Dry Port</label>
+              <select id="filterPort" class="w-full mt-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white">
+                <option value="ALL">All Ports (MOJ, KAL, DDL)</option>
+                <option value="MOJ">Mojo Dry Port (MOJ)</option>
+                <option value="KAL">Kality Dry Port (KAL)</option>
+                <option value="DDL">Dewele / Djibouti (DDL)</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-end gap-2">
+            <button onclick="resetFilters()" class="bg-[#ef4444] hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset</span>
+            </button>
+            <button onclick="applyFilters()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i>
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- MASTER JOBS REGISTRY TABLE (Wise Digital 1:1) -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          
+          <!-- Table Header Controls (Copy, CSV, Print, Tabs, Search) -->
+          <div class="p-4 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            
+            <!-- Left: Export Buttons -->
+            <div class="flex items-center gap-2">
+              <button onclick="exportTableToCSV()" class="btn-table-action">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                <span>CSV</span>
+              </button>
+              <button onclick="window.print()" class="btn-table-action">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span>Print</span>
+              </button>
+              
+              <!-- Filter Tabs (Image 7 Style) -->
+              <div class="ml-2 flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                <button onclick="filterTab('all')" id="tab-all" class="px-2.5 py-1 rounded bg-[#0284c7] text-white">All Files</button>
+                <button onclick="filterTab('active')" id="tab-active" class="px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Active</button>
+                <button onclick="filterTab('cleared')" id="tab-cleared" class="px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Cleared</button>
+              </div>
+            </div>
+
+            <!-- Right: Search input -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-semibold">Search:</span>
+              <input type="text" id="tableQuickSearch" onkeyup="handleQuickSearch(event)" placeholder="Card #, customer, B/L..." class="border border-slate-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 w-56">
+            </div>
+          </div>
+
+          <!-- Table Content -->
+          <div class="overflow-x-auto">
+            <table class="custom-table" id="jobsMasterTable">
+              <thead>
+                <tr>
+                  <th class="w-12 text-center">NO</th>
+                  <th>FILE REF</th>
+                  <th>CONSIGNEE (አስመጪ)</th>
+                  <th>BILL OF LADING</th>
+                  <th>PORT</th>
+                  <th>CONTAINER</th>
+                  <th>STAFF</th>
+                  <th>STATUS</th>
+                  <th>CPO STATUS</th>
+                  <th class="text-right">BALANCE (ETB)</th>
+                  <th class="text-center w-36">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="jobsTableBody">
+                <!-- Injected via JavaScript from backend API -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer -->
+          <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <span id="tableEntriesCount">Showing entries</span>
+            <span>Nohada Trading Logistics ERP System</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 3: MULTI-BANK CPO GUARANTEES REGISTRY (Excel Digital Twin) -->
+      <!-- ===================================================================== -->
+      <div id="view-cpo" class="space-y-6 hidden">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Multi-Bank CPO Guarantees Registry</h1>
+            <p class="text-xs text-slate-500 mt-1">Direct Digital Twin of Excel Tracker — Bank of Abyssinia, Commercial Bank of Ethiopia, Awash & Abukii</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportCpoTableToCSV()" class="btn-table-action">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <span>Export CPO CSV</span>
+            </button>
+            <button onclick="openDepositModal()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Record New Deposit / CPO</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 CPO METRIC CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase text-slate-500">
+              <i data-lucide="shield" class="w-4 h-4 text-sky-600"></i>
+              <span>Total CPO Exposure</span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-2">3,450,000.00 <span class="text-xs font-bold text-slate-500">ETB</span></div>
+            <span class="text-[10px] text-slate-400 mt-1 block">Active Empty Container Security Guarantees</span>
+          </div>
+
+          <div class="bg-white border-2 border-amber-300 rounded-xl p-4 shadow-xs bg-amber-50/30">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase text-amber-800">
+              <i data-lucide="lock" class="w-4 h-4 text-amber-600"></i>
+              <span>Currently HELD in Bank Vaults</span>
+            </div>
+            <div class="text-2xl font-black text-amber-900 mt-2" id="cpoHeldCardCount">5 Held Guarantees</div>
+            <span class="text-[10px] text-amber-700 mt-1 block">Awaiting Interchange Empty Return Verification</span>
+          </div>
+
+          <div class="bg-white border-2 border-emerald-300 rounded-xl p-4 shadow-xs bg-emerald-50/30">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase text-emerald-800">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+              <span>Returned to Customer Agents</span>
+            </div>
+            <div class="text-2xl font-black text-emerald-900 mt-2" id="cpoReturnedCardCount">2 Returned</div>
+            <span class="text-[10px] text-emerald-700 mt-1 block">Successfully Handed Over & Closed</span>
+          </div>
+        </div>
+
+        <!-- CPO FILTERS & TABLE -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50">
+            <!-- Bank Filter Tabs -->
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="text-xs font-bold text-slate-600 mr-2">Filter Bank:</span>
+              <button onclick="filterCpoByBank('ALL')" id="cpo-bank-ALL" class="px-2.5 py-1 text-xs font-bold rounded bg-[#0284c7] text-white">All Banks</button>
+              <button onclick="filterCpoByBank('Abyssinia')" id="cpo-bank-Abyssinia" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">BOA</button>
+              <button onclick="filterCpoByBank('Ethiopia')" id="cpo-bank-Ethiopia" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">CBE</button>
+              <button onclick="filterCpoByBank('Awash')" id="cpo-bank-Awash" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">Awash</button>
+              <button onclick="filterCpoByBank('Abukii')" id="cpo-bank-Abukii" class="px-2.5 py-1 text-xs font-bold rounded text-slate-600 hover:bg-slate-200">Abukii</button>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs font-bold">
+              <button onclick="filterCpoByStatus('ALL')" id="cpo-status-ALL" class="px-2.5 py-0.5 rounded bg-slate-800 text-white">All Deposits</button>
+              <button onclick="filterCpoByStatus('HELD')" id="cpo-status-HELD" class="px-2.5 py-0.5 rounded text-amber-700 hover:bg-amber-50">Held Only</button>
+              <button onclick="filterCpoByStatus('RETURNED')" id="cpo-status-RETURNED" class="px-2.5 py-0.5 rounded text-emerald-700 hover:bg-emerald-50">Returned Only</button>
+            </div>
+          </div>
+
+          <!-- CPO Master Table -->
+          <div class="overflow-x-auto">
+            <table class="custom-table" id="cpoMasterTable">
+              <thead>
+                <tr>
+                  <th class="w-10 text-center">NO</th>
+                  <th>FILE REF</th>
+                  <th>CONSIGNEE (CLIENT)</th>
+                  <th>BANK ACCOUNT</th>
+                  <th>DEPOSIT TYPE</th>
+                  <th class="text-right">AMOUNT (ETB)</th>
+                  <th>STATUS</th>
+                  <th>HANDOVER DETAILS</th>
+                  <th>REMARKS / PURPOSE</th>
+                  <th class="text-center w-28">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="cpoMasterTableBody">
+                <!-- Injected via JavaScript from /api/cpo -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <span id="cpoEntriesCount">Showing CPO records</span>
+            <span>Nohada Trading CPO Settlement Engine</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 2: MASTER JOB COCKPIT (THE BILAL SADIK FILE ABM00240/26) -->
+      <!-- ===================================================================== -->
+      <div id="view-cockpit" class="space-y-6 hidden">
+        
+        <!-- Top Back Bar & Quick Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <button onclick="switchView('dashboard')" class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs transition">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+              <span>Back to Dashboard</span>
+            </button>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold bg-sky-100 text-sky-800 px-2 py-0.5 rounded uppercase" id="cockpitFileRefBadge">ABM00240/26</span>
+              <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded uppercase" id="cockpitStatusBadge">CLEARED</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openPrintStatementModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-600"></i>
+              <span>Print Official Statement</span>
+            </button>
+            <button onclick="openDepositModal()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add CPO / Expense</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- DIGITAL BLUE JACKET CARD (Image 1 Blueprint) -->
+        <div class="bg-gradient-to-r from-sky-900 to-slate-900 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            
+            <!-- Left Info -->
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="bg-sky-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">Physical Blue File</span>
+                <span class="text-sky-300 text-xs font-semibold">Ref: <strong class="text-white text-sm" id="cockpitRefNumber">ABM00240/26</strong></span>
+              </div>
+              <h2 class="text-2xl font-black tracking-tight" id="cockpitConsigneeName">BILAL SADIK YASIN</h2>
+              <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-sky-200">
+                <span>TIN: <strong class="text-white" id="cockpitTin">0107735519</strong></span>
+                <span>•</span>
+                <span>Phone: <strong class="text-white" id="cockpitPhone">0951448385</strong></span>
+                <span>•</span>
+                <span>Staff: <strong class="text-amber-300" id="cockpitStaff">Imran (0911525317)</strong></span>
+                <span>•</span>
+                <span>Port: <strong class="text-emerald-300" id="cockpitPort">MOJ (Mojo Dry Port)</strong></span>
+              </div>
+            </div>
+
+            <!-- Right Key Metrics -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/15">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">B/L Number</span>
+                <span class="text-sm font-black text-white" id="cockpitBlNumber">ZSN0899042</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">Container</span>
+                <span class="text-sm font-black text-white" id="cockpitContainer">TEMU3176663 (20GP)</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">Customs Tax (Cash)</span>
+                <span class="text-sm font-black text-emerald-300" id="cockpitCustomsTax">268,010.72 ETB</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">Declaration</span>
+                <span class="text-sm font-black text-white" id="cockpitDecNo">4-25530/2026</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">Demurrage Free Days</span>
+                <span class="text-sm font-black text-amber-300 flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                  <span>2 Days Left</span>
+                </span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-sky-200 block">Empty Box Guarantee</span>
+                <span class="text-sm font-black text-emerald-300">Approved</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 7-STAGE PIPELINE STEPPER -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i data-lucide="git-commit" class="w-4 h-4 text-sky-600"></i>
+            <span>Live Shipment & Clearance Progress</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+            <!-- Stage 1 -->
+            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
+              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-bold text-[11px]">1. Doc Received</div>
+              <div class="text-[10px] text-emerald-700 mt-0.5">18/11/2026</div>
+            </div>
+            <!-- Stage 2 -->
+            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
+              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-bold text-[11px]">2. At Djibouti</div>
+              <div class="text-[10px] text-emerald-700 mt-0.5">CMA CGM BAHIA</div>
+            </div>
+            <!-- Stage 3 -->
+            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
+              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-bold text-[11px]">3. Mojo Transit</div>
+              <div class="text-[10px] text-emerald-700 mt-0.5">Truck DDL02</div>
+            </div>
+            <!-- Stage 4 -->
+            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
+              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-bold text-[11px]">4. eCMS Declared</div>
+              <div class="text-[10px] text-emerald-700 mt-0.5">Dec: 4-25530</div>
+            </div>
+            <!-- Stage 5 -->
+            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
+              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-bold text-[11px]">5. Tax Paid</div>
+              <div class="text-[10px] text-emerald-700 mt-0.5">268,010.72 ETB</div>
+            </div>
+            <!-- Stage 6 -->
+            <div class="p-2.5 rounded-lg border border-emerald-400 bg-emerald-100 text-emerald-950 text-center ring-2 ring-emerald-500">
+              <div class="stepper-circle bg-emerald-700 text-white mx-auto mb-1.5">✓</div>
+              <div class="font-black text-[11px]">6. Cargo Cleared</div>
+              <div class="text-[10px] text-emerald-800 mt-0.5">Released Mojo</div>
+            </div>
+            <!-- Stage 7 -->
+            <div class="p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-center">
+              <div class="stepper-circle bg-amber-500 text-white mx-auto mb-1.5">7</div>
+              <div class="font-bold text-[11px]">7. Interchange</div>
+              <div class="text-[10px] text-amber-700 mt-0.5">Pending Box Return</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COCKPIT DETAIL TABS (Ledger vs Documents vs Tax Estimator) -->
+        <div class="flex items-center gap-2 border-b border-slate-200 pb-1">
+          <button onclick="switchCockpitTab('ledger')" id="cockpit-tab-ledger" class="px-4 py-2 font-bold text-xs rounded-t-lg bg-[#0284c7] text-white">
+            💰 CPO & Financial Settlement
+          </button>
+          <button onclick="switchCockpitTab('documents')" id="cockpit-tab-documents" class="px-4 py-2 font-bold text-xs rounded-t-lg text-slate-600 hover:bg-slate-100">
+            📄 10-Point Document Vault (eCMS)
+          </button>
+          <button onclick="switchCockpitTab('assessment')" id="cockpit-tab-assessment" class="px-4 py-2 font-bold text-xs rounded-t-lg text-slate-600 hover:bg-slate-100">
+            🏛️ Customs Tax Breakdown (268k)
+          </button>
+        </div>
+
+        <!-- TAB 1: FINANCIAL SETTLEMENT LEDGER -->
+        <div id="cockpit-content-ledger" class="space-y-6">
+
+          <!-- 3 Financial Summary Cards (Auto-reconciled) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Operating Cash Deposited</span>
+              <div class="text-2xl font-black text-slate-900 mt-1" id="sumOperatingDeposit">200,000.00 ETB</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Abukii Bank Account (Excluding Held CPOs)</span>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Total Disbursed Expenses</span>
+              <div class="text-2xl font-black text-rose-600 mt-1" id="sumTotalExpenses">203,000.00 ETB</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Transport + Djibouti Fee + Nohada Agency</span>
+            </div>
+
+            <div class="bg-white border-2 border-red-300 rounded-xl p-4 shadow-xs bg-red-50/40">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-red-700 uppercase">Net Balance Reconciled</span>
+                <span class="badge-pill badge-due text-[10px]" id="cockpitBalanceStatus">CLIENT OWES NOHADA</span>
+              </div>
+              <div class="text-2xl font-black text-red-600 mt-1" id="sumNetBalance">-3,000.00 ETB</div>
+              <span class="text-[10px] text-red-600 font-semibold mt-1 block">Client must settle 3,000 ETB to close file</span>
+            </div>
+
+          </div>
+
+          <!-- Section A: CPO & Deposits Registry (Image 7 Excel Columns H to L) -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="shield" class="w-4 h-4 text-sky-600"></i>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">1. Client Deposits & CPO Guarantees Registry</h3>
+              </div>
+              <button onclick="openDepositModal()" class="btn-card-action">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Add Deposit / CPO</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th>TYPE</th>
+                    <th>BANK ACCOUNT</th>
+                    <th>AMOUNT (ETB)</th>
+                    <th>PURPOSE</th>
+                    <th>STATUS</th>
+                    <th>RETURN DETAILS</th>
+                    <th class="text-center">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="cockpitDepositsTable">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section B: Itemized Job Expenses (Replaces Free-Text Remarks) -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="receipt" class="w-4 h-4 text-rose-600"></i>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">2. Itemized Disbursed Job Expenses</h3>
+              </div>
+              <button onclick="openExpenseModal()" class="btn-card-action">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Add Expense Item</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th>CATEGORY</th>
+                    <th>DESCRIPTION</th>
+                    <th>DISBURSED AMOUNT</th>
+                    <th>PAYEE / DRIVER</th>
+                    <th>RECEIPT #</th>
+                  </tr>
+                </thead>
+                <tbody id="cockpitExpensesTable">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TAB 2: 10-POINT DOCUMENT VAULT -->
+        <div id="cockpit-content-documents" class="space-y-4 hidden">
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Customs Single Window (eCMS) Attached Documents Checklist</h3>
+                <p class="text-xs text-slate-500">Replaces the 20+ fragmented pCloud folders with verified eCMS Document Codes</p>
+              </div>
+              <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">9 / 10 Documents Verified</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="documentsChecklistContainer">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CUSTOMS ASSESSMENT NOTICE (268,010.72 ETB Breakdown) -->
+        <div id="cockpit-content-assessment" class="space-y-4 hidden">
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+            <div class="border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Ethiopian Customs Assessment Notice Details</h3>
+                <span class="text-xs text-slate-500">Declaration No: <strong>4-25530/2026</strong> | Receipt: <strong>MOJ00-R-59983</strong> | Mode: <strong>CASH</strong></span>
+              </div>
+              <span class="badge-pill badge-paid">PAID IN FULL</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Left: Assessment Breakdown Table -->
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>CODE</th>
+                    <th>TAX DESIGNATION</th>
+                    <th class="text-right">ASSESSED VALUE (ETB)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">01</span></td>
+                    <td>Import Customs Tax</td>
+                    <td class="text-right font-semibold">114,552.90</td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">03</span></td>
+                    <td>Excise Tax</td>
+                    <td class="text-right font-semibold">20,987.75</td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">05</span></td>
+                    <td>Goods Liable to 10% Surtax</td>
+                    <td class="text-right font-semibold">46,283.40</td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">12</span></td>
+                    <td>Social Welfare Tax (3%)</td>
+                    <td class="text-right font-semibold">0.00</td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">04</span></td>
+                    <td>Value Added Tax (15% VAT)</td>
+                    <td class="text-right font-semibold">76,367.85</td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-bold text-sky-700">15</span></td>
+                    <td>Withholding Tax (3%)</td>
+                    <td class="text-right font-semibold">9,818.82</td>
+                  </tr>
+                  <tr class="bg-emerald-50 font-black text-emerald-900 border-t-2 border-emerald-300">
+                    <td colspan="2">TOTAL CUSTOMS DUTY & TAX PAID</td>
+                    <td class="text-right text-base">268,010.72 ETB</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Right: Officers Note Messages -->
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700 block">Single Window Officer Notes</span>
+                
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs space-y-1">
+                  <div class="flex items-center justify-between font-bold text-emerald-900">
+                    <span>Officer EB0843:</span>
+                    <span>Nov 21, 2026 3:42 PM</span>
+                  </div>
+                  <p class="text-emerald-800 font-semibold">TRANSIT PERMITTED - Goods approved for transit to Mojo Dry Port.</p>
+                </div>
+
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs space-y-1">
+                  <div class="flex items-center justify-between font-bold text-emerald-900">
+                    <span>Officer EM2275:</span>
+                    <span>Nov 21, 2026 3:38 PM</span>
+                  </div>
+                  <p class="text-emerald-800 font-semibold">Dear our customer Your Guarantee Letter For Empty Container Request is Approved.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 3: CUSTOMS TAX ESTIMATION CALCULATOR (TAX.xlsx DIGITAL TWIN) -->
+      <!-- ===================================================================== -->
+      <div id="view-tax" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Customs Duty & Tax Estimator (TAX.xlsx)</h2>
+            <p class="text-xs text-slate-500">Automated DPV, Duty, Excise, Surtax, VAT & Withholding Calculation</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openAddCargoModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Cargo Item</span>
+            </button>
+            <button onclick="recalculateTaxTable()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Recalculate All Items</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Exchange Rate Settings -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <label class="text-xs font-bold text-slate-700 uppercase">Exchange Rate (USD to ETB):</label>
+            <input type="number" id="taxExchangeRate" value="125.50" step="0.01" class="border border-slate-300 rounded px-3 py-1.5 text-xs font-bold w-28 focus:outline-none focus:ring-1 focus:ring-sky-500">
+          </div>
+          <div class="text-xs text-slate-500">
+            Formula: <code>DPV = (FOB * Rate) + Freight + Insurance + Other</code>
+          </div>
+        </div>
+
+        <!-- Tax Spreadsheet Table (Exact match with Image 4 TAX.xlsx) -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="custom-table text-xs">
+              <thead>
+                <tr>
+                  <th>GOODS DESCRIPTION</th>
+                  <th class="text-right">QNTY</th>
+                  <th class="text-right">INVO (USD)</th>
+                  <th class="text-right">FOB (USD)</th>
+                  <th class="text-right">FRT (ETB)</th>
+                  <th class="text-right">INS (ETB)</th>
+                  <th class="text-right">OTHER (ETB)</th>
+                  <th class="text-right bg-sky-50">DPV (ETB)</th>
+                  <th class="text-right">DUTY</th>
+                  <th class="text-right">EXCISE</th>
+                  <th class="text-right">SURTAX</th>
+                  <th class="text-right">VAT (15%)</th>
+                  <th class="text-right">WHT (3%)</th>
+                  <th class="text-right bg-amber-50 font-bold">TOTAL TAX (ETB)</th>
+                  <th class="text-center w-10">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="taxTableBody">
+                <!-- Injected via JS with the exact 5 items from Image 4 -->
+              </tbody>
+              <tfoot class="bg-amber-100/60 font-black border-t-2 border-amber-300">
+                <tr>
+                  <td colspan="7" class="text-right uppercase tracking-wider">GRAND TOTAL ESTIMATED TAX:</td>
+                  <td class="text-right font-black" id="taxGrandDpv">12,592,658.24</td>
+                  <td class="text-right" id="taxGrandDuty">4,407,430.38</td>
+                  <td class="text-right" id="taxGrandExcise">850,004.43</td>
+                  <td class="text-right" id="taxGrandSurtax">1,785,093.05</td>
+                  <td class="text-right" id="taxGrandVat">2,546,625.35</td>
+                  <td class="text-right" id="taxGrandWht">377,779.74</td>
+                  <td class="text-right text-sm font-black text-amber-900" id="taxGrandTotal">10,375,563.35 ETB</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 6: CREATE NEW JOB FILE — WISE DIGITAL STYLE -->
+      <!-- ===================================================================== -->
+      <div id="view-newjob" class="hidden">
+
+        <!-- PAGE TITLE ROW (matches Wise Digital "Job Card Information" style) -->
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Job File Information</h1>
+            <p class="text-sm text-slate-500 mt-1">Record client shipment details, container info, and register initial CPO deposit</p>
+          </div>
+          <button onclick="switchView('jobs')" class="inline-flex items-center gap-1.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold shadow-xs transition">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            Back to Registry
+          </button>
+        </div>
+
+        <div class="space-y-5">
+
+          <!-- ================================================================= -->
+          <!-- SECTION 1: CONSIGNEE & FILE INFO (Wise Digital white card style) -->
+          <!-- ================================================================= -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <!-- Section Header (blue icon + title, bottom border) -->
+            <div class="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
+              <i data-lucide="user-check" class="w-4 h-4 text-[#0284c7]"></i>
+              <h2 class="font-semibold text-sm text-[#0284c7]">Consignee & File Assignment</h2>
+            </div>
+            <!-- Form Grid -->
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <!-- Consignee Name -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Consignee (Client) Name *</label>
+                <div class="relative">
+                  <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="text" id="njConsignee" placeholder="Search or type client name, TIN, phone..." class="w-full border border-slate-300 rounded-lg pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 placeholder-slate-400">
+                </div>
+              </div>
+              <!-- Assigned Staff -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Assigned Staff *</label>
+                <select id="njStaff" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400">
+                  <option value="Imran (0911525317)">Imran (Operations)</option>
+                  <option value="Sofia (0911762234)">Sofia (Clearing)</option>
+                  <option value="Tofik (0911874411)">Tofik (Transit)</option>
+                </select>
+              </div>
+              <!-- File Ref -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">File Reference No.</label>
+                <input type="text" id="njFileRef" placeholder="e.g. ABM00246/26 (auto)" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 placeholder-slate-400">
+              </div>
+              <!-- TIN -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">TIN Number</label>
+                <input type="text" id="njTin" placeholder="e.g. 0107735519" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Phone -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number</label>
+                <input type="text" id="njPhone" placeholder="e.g. 0951448385" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Representative -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Customer Representative</label>
+                <input type="text" id="njRep" placeholder="e.g. Hamid / 0938542494" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Address -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Client Address</label>
+                <input type="text" id="njAddress" placeholder="e.g. Addis Ababa, Kolfe W-07" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Dry Port (Wise Digital style: radio as select-like group) -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Operation Dry Port *</label>
+                <div class="flex gap-2">
+                  <label class="flex-1 flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2.5 cursor-pointer hover:border-sky-400 hover:bg-sky-50 transition has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-400">
+                    <input type="radio" name="njPort" value="MOJ" checked class="accent-sky-600">
+                    <div>
+                      <div class="text-xs font-bold text-slate-800">Mojo (MOJ)</div>
+                      <div class="text-[10px] text-slate-500">Primary Corridor</div>
+                    </div>
+                  </label>
+                  <label class="flex-1 flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2.5 cursor-pointer hover:border-sky-400 hover:bg-sky-50 transition has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-400">
+                    <input type="radio" name="njPort" value="KAL" class="accent-sky-600">
+                    <div>
+                      <div class="text-xs font-bold text-slate-800">Kality (KAL)</div>
+                      <div class="text-[10px] text-slate-500">Addis Direct</div>
+                    </div>
+                  </label>
+                  <label class="flex-1 flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2.5 cursor-pointer hover:border-sky-400 hover:bg-sky-50 transition has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-400">
+                    <input type="radio" name="njPort" value="DDL" class="accent-sky-600">
+                    <div>
+                      <div class="text-xs font-bold text-slate-800">Dewele (DDL)</div>
+                      <div class="text-[10px] text-slate-500">Cross-Border</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================= -->
+          <!-- SECTION 2: SHIPMENT & CONTAINER (tabbed like Wise Digital) -->
+          <!-- ================================================================= -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
+              <i data-lucide="ship" class="w-4 h-4 text-[#0284c7]"></i>
+              <h2 class="font-semibold text-sm text-[#0284c7]">Shipment, Cargo & Container Details</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <!-- B/L -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Bill of Lading (B/L) Number *</label>
+                <input type="text" id="njBl" placeholder="e.g. ZSN0899042, MAEU224549004..." class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 placeholder-slate-400 placeholder:font-normal">
+              </div>
+              <!-- Shipping Line -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Shipping Line</label>
+                <select id="njShippingLine" onchange="toggleOtherInput(this, 'njShippingLineOther')" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="CMA CGM">CMA CGM</option>
+                  <option value="Maersk Line">Maersk Line</option>
+                  <option value="Evergreen Line">Evergreen Line</option>
+                  <option value="MSC">MSC</option>
+                  <option value="COSCO">COSCO</option>
+                  <option value="Other">Other (Specify below)...</option>
+                </select>
+                <input type="text" id="njShippingLineOther" placeholder="Enter custom shipping line name..." class="hidden w-full mt-2 border border-sky-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 bg-sky-50/50">
+              </div>
+              <!-- Delivery Terms -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Delivery Terms</label>
+                <select id="njDeliveryTerms" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option>FOB</option>
+                  <option>CIF</option>
+                  <option>CFR</option>
+                  <option>EXW</option>
+                </select>
+              </div>
+              <!-- Cargo Description -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Cargo / Goods Description</label>
+                <input type="text" id="njCargoDesc" placeholder="e.g. Ready Made Garment, Industrial Hardware..." class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Package Qty -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Package Qty</label>
+                <input type="number" id="njPkgQty" placeholder="e.g. 93" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Gross Weight -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Gross Weight (KG)</label>
+                <input type="number" id="njGrossWeight" placeholder="e.g. 9600" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Container Number -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Container Number *</label>
+                <input type="text" id="njContainer" placeholder="e.g. TEMU3176663" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400 placeholder:font-normal">
+              </div>
+              <!-- Container Type -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Container Type</label>
+                <select id="njContainerType" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="1*20' GP">1×20' GP (20 Foot)</option>
+                  <option value="1*40' HQ">1×40' HQ (40 Foot High Cube)</option>
+                  <option value="1*40' GP">1×40' GP (40 Foot)</option>
+                  <option value="2*20' GP">2×20' GP (Two 20-Foot)</option>
+                </select>
+              </div>
+              <!-- Seal Number -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Seal Number</label>
+                <input type="text" id="njSeal" placeholder="e.g. J3146427" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400 placeholder:font-normal">
+              </div>
+              <!-- Free Days -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Free Detention Days</label>
+                <input type="number" id="njFreeDays" value="14" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400">
+              </div>
+              <!-- Vessel Name -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Vessel Name</label>
+                <input type="text" id="njVessel" placeholder="e.g. CMA CGM BAHIA" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400">
+              </div>
+              <!-- Voyage Number -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Voyage Number</label>
+                <input type="text" id="njVoyage" placeholder="e.g. 0RDAW1MA" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400 placeholder:font-normal">
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================= -->
+          <!-- SECTION 3: INITIAL DEPOSIT / CPO (Wise Digital insurance style) -->
+          <!-- ================================================================= -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-[#0284c7]"></i>
+                <h2 class="font-semibold text-sm text-[#0284c7]">Initial Deposit / CPO Guarantee</h2>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">Optional — record if already received</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <!-- Category -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Deposit Category</label>
+                <select id="njDepositCategory" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="">— No Deposit —</option>
+                  <option value="GUARANTEE_CPO">CPO Guarantee (Held at Bank)</option>
+                  <option value="OPERATIONAL_CASH">Operating Cash Advance</option>
+                </select>
+              </div>
+              <!-- Amount -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Amount (ETB)</label>
+                <input type="number" id="njDepositAmount" placeholder="e.g. 385,000" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-slate-400 placeholder:font-normal">
+              </div>
+              <!-- Type -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Payment Type</label>
+                <select id="njDepositType" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="CPO Guarantee">CPO (Cashier's Payment Order)</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Cash">Cash Deposit</option>
+                </select>
+              </div>
+              <!-- Bank -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Bank Account</label>
+                <select id="njDepositBank" onchange="toggleOtherInput(this, 'njDepositBankOther')" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="Bank of Abyssinia (BOA)">Bank of Abyssinia (BOA)</option>
+                  <option value="Commercial Bank of Ethiopia (CBE)">Commercial Bank of Ethiopia (CBE)</option>
+                  <option value="Awash Bank">Awash Bank</option>
+                  <option value="Abukii Bank">Abukii Bank</option>
+                  <option value="Gulf Badr Group">Gulf Badr Group</option>
+                  <option value="NIB Bank">NIB International Bank</option>
+                  <option value="Other">Other Bank (Specify below)...</option>
+                </select>
+                <input type="text" id="njDepositBankOther" placeholder="Enter custom bank name..." class="hidden w-full mt-2 border border-sky-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 bg-sky-50/50">
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================= -->
+          <!-- SUBMIT BAR (clean white bar at bottom, Wise Digital style) -->
+          <!-- ================================================================= -->
+          <div class="bg-white border border-slate-200 rounded-xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <p class="text-xs text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-sky-500 flex-shrink-0"></i>
+              Fields marked <strong class="text-slate-700">*</strong> are required. File opens as <strong class="text-slate-700">"In Transit"</strong> — update status from the cockpit view.
+            </p>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button onclick="switchView('jobs')" class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-300 transition">
+                Cancel
+              </button>
+              <button onclick="submitNewJobFromPage()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition">
+                <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                Open Blue File Jacket
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD CUSTOM CARGO ITEM (TAX ESTIMATOR) -->
+  <!-- ========================================================================= -->
+  <div id="modalAddCargo" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calculator" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Add Cargo Item for Tax Estimation</h3>
+        </div>
+        <button onclick="closeModal('modalAddCargo')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Cargo / Goods Description *</label>
+          <input type="text" id="cargoDescInput" placeholder="e.g. TEXTILE FABRIC, INDUSTRIAL PUMP..." class="w-full border border-slate-300 rounded px-3 py-2 uppercase font-bold text-slate-900">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Quantity *</label>
+            <input type="number" id="cargoQtyInput" value="1000" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Unit Price (USD) *</label>
+            <input type="number" id="cargoUnitPriceInput" value="10.00" step="0.01" class="w-full border border-slate-300 rounded px-3 py-2 font-bold text-slate-900">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1 text-[11px]">Freight (ETB)</label>
+            <input type="number" id="cargoFreightInput" value="50000" class="w-full border border-slate-300 rounded px-2 py-1.5">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1 text-[11px]">Insurance (ETB)</label>
+            <input type="number" id="cargoInsuranceInput" value="50" class="w-full border border-slate-300 rounded px-2 py-1.5">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1 text-[11px]">Other (ETB)</label>
+            <input type="number" id="cargoOtherInput" value="15000" class="w-full border border-slate-300 rounded px-2 py-1.5">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modalAddCargo')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="submitNewCargoItem()" class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs">
+          Calculate Item
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RETURN CPO GUARANTEE TO CUSTOMER -->
+  <!-- ========================================================================= -->
+  <div id="modalReturnCpo" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-5 h-5 text-amber-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Return CPO Guarantee to Customer</h3>
+        </div>
+        <button onclick="closeModal('modalReturnCpo')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <span class="text-slate-500 font-semibold">Held Amount:</span>
+          <strong class="text-base text-slate-900 ml-1" id="returnModalAmount">385,000.00 ETB</strong>
+        </div>
+        <div>
+          <span class="text-slate-500 font-semibold">Bank:</span>
+          <span class="text-slate-800 font-bold ml-1" id="returnModalBank">Bank of Abyssinia (BOA)</span>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Returned To (Person / Agent) *</label>
+          <input type="text" id="returnPersonInput" placeholder="e.g. Yeshak, Hamdu, Abdurahim..." class="w-full border border-slate-300 rounded px-3 py-2 focus:ring-1 focus:ring-sky-500">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Return Date *</label>
+          <input type="date" id="returnDateInput" class="w-full border border-slate-300 rounded px-3 py-2 focus:ring-1 focus:ring-sky-500">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Remarks / Interchange Verification</label>
+          <textarea id="returnRemarksInput" rows="2" placeholder="Empty container verified returned to Djibouti..." class="w-full border border-slate-300 rounded px-3 py-2 focus:ring-1 focus:ring-sky-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modalReturnCpo')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="confirmReturnCpo()" class="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-xs">
+          Confirm CPO Handover
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD EXPENSE ITEM -->
+  <!-- ========================================================================= -->
+  <div id="modalAddExpense" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="receipt" class="w-5 h-5 text-rose-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Record Disbursed Job Expense</h3>
+        </div>
+        <button onclick="closeModal('modalAddExpense')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Expense Category *</label>
+          <select id="expenseCategoryInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="Transport">Inland Transport (Djibouti to Mojo Truck)</option>
+            <option value="Djibouti Port & Transit">Djibouti Port & Handling Fee</option>
+            <option value="Customs Duty">Customs Tax & Penalties</option>
+            <option value="Service Charge">Nohada Agency Service Fee</option>
+            <option value="Other">Other Operational Cost</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Description *</label>
+          <input type="text" id="expenseDescriptionInput" placeholder="e.g. Djibouti to Mojo Truck Freight..." class="w-full border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Amount (ETB) *</label>
+          <input type="number" id="expenseAmountInput" placeholder="e.g. 146500" class="w-full border border-slate-300 rounded px-3 py-2 font-bold text-slate-900">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Paid To / Driver Plate / Vendor</label>
+          <input type="text" id="expensePaidToInput" placeholder="e.g. Driver Ahmed (Plate 2-86432)..." class="w-full border border-slate-300 rounded px-3 py-2">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modalAddExpense')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="submitNewExpense()" class="px-4 py-2 text-xs font-bold bg-[#be123c] hover:bg-rose-800 text-white rounded-lg shadow-xs">
+          Record Expense
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD DEPOSIT / CPO -->
+  <!-- ========================================================================= -->
+  <div id="modalAddDeposit" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-plus" class="w-5 h-5 text-sky-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Record New Client Deposit / CPO</h3>
+        </div>
+        <button onclick="closeModal('modalAddDeposit')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Deposit Category *</label>
+          <select id="depositCategoryInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="GUARANTEE_CPO">Security CPO Guarantee (Held until Empty Return)</option>
+            <option value="OPERATIONAL_CASH">Operational Cash Advance (For Transport & Clearing)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Payment Type</label>
+          <select id="depositTypeInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="CPO Guarantee">CPO (Cashier's Payment Order)</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cash">Cash Deposit</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Bank Account *</label>
+          <select id="depositBankInput" onchange="toggleOtherInput(this, 'depositBankOtherInput')" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="Bank of Abyssinia (BOA)">Bank of Abyssinia (BOA)</option>
+            <option value="Commercial Bank of Ethiopia (CBE)">Commercial Bank of Ethiopia (CBE)</option>
+            <option value="Awash Bank">Awash Bank</option>
+            <option value="Abukii Bank">Abukii Bank</option>
+            <option value="Gulf Badr Group">Gulf Badr Group Account</option>
+            <option value="NIB Bank">NIB International Bank</option>
+            <option value="Other">Other Bank (Specify below)...</option>
+          </select>
+          <input type="text" id="depositBankOtherInput" placeholder="Enter custom bank name..." class="hidden w-full mt-2 border border-sky-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-sky-500 bg-sky-50/50">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Deposit Amount (ETB) *</label>
+          <input type="number" id="depositAmountInput" placeholder="e.g. 385000" class="w-full border border-slate-300 rounded px-3 py-2 font-bold text-slate-900">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Purpose / Remarks</label>
+          <input type="text" id="depositPurposeInput" placeholder="e.g. 1x20' Container Guarantee..." class="w-full border border-slate-300 rounded px-3 py-2">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modalAddDeposit')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="submitNewDeposit()" class="px-4 py-2 text-xs font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg shadow-xs">
+          Record Deposit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CREATE NEW JOB FILE (BLUE JACKET) -->
+  <!-- ========================================================================= -->
+  <div id="modalNewJob" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="folder-plus" class="w-5 h-5 text-sky-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Open New Blue File Jacket (Job)</h3>
+        </div>
+        <button onclick="closeModal('modalNewJob')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">File Ref Number (Auto/Custom)</label>
+            <input type="text" id="newJobRefInput" placeholder="e.g. ABM00246/26 or auto" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Assigned Staff *</label>
+            <select id="newJobStaffInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+              <option value="Imran (0911525317)">Imran (0911525317)</option>
+              <option value="Sofia (0911762234)">Sofia (0911762234)</option>
+              <option value="Tofik (0911874411)">Tofik (0911874411)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Consignee Name (Client) *</label>
+          <input type="text" id="newJobConsigneeInput" placeholder="e.g. Mulugeta Tesfaye / General Trading" class="w-full border border-slate-300 rounded px-3 py-2 font-bold text-slate-900">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">TIN Number</label>
+            <input type="text" id="newJobTinInput" placeholder="e.g. 0108849201" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Phone Number</label>
+            <input type="text" id="newJobPhoneInput" placeholder="e.g. 0911445566" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-2">
+            <label class="font-bold text-slate-700 block mb-1">Bill of Lading (B/L) *</label>
+            <input type="text" id="newJobBlInput" placeholder="e.g. CMAU98421004" class="w-full border border-slate-300 rounded px-3 py-2 font-mono">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Dry Port *</label>
+            <select id="newJobPortInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+              <option value="MOJ">Mojo (MOJ)</option>
+              <option value="KAL">Kality (KAL)</option>
+              <option value="DDL">Dewele (DDL)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Container Number</label>
+            <input type="text" id="newJobContainerInput" placeholder="e.g. TGHU114920" class="w-full border border-slate-300 rounded px-3 py-2 font-mono">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Container Type</label>
+            <select id="newJobContainerTypeInput" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+              <option value="1*20' GP">1*20' GP (20 Foot)</option>
+              <option value="1*40' HQ">1*40' HQ (40 Foot High Cube)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Initial Deposit (Optional) -->
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+          <span class="font-bold text-[11px] uppercase tracking-wider text-slate-600 block">Initial Deposit / CPO (Optional)</span>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-500 font-bold block">Amount (ETB)</label>
+              <input type="number" id="newJobDepositAmountInput" placeholder="385000" class="w-full border border-slate-300 rounded px-2 py-1.5 font-bold">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 font-bold block">Type</label>
+              <select id="newJobDepositTypeInput" class="w-full border border-slate-300 rounded px-2 py-1.5 bg-white text-xs">
+                <option value="CPO Guarantee">CPO Guarantee</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cash">Cash Advance</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 font-bold block">Bank</label>
+              <select id="newJobDepositBankInput" class="w-full border border-slate-300 rounded px-2 py-1.5 bg-white text-xs">
+                <option value="Bank of Abyssinia (BOA)">BOA</option>
+                <option value="Commercial Bank of Ethiopia (CBE)">CBE</option>
+                <option value="Abukii Bank">Abukii</option>
+                <option value="Gulf Badr Group">Gulf Badr</option>
+                <option value="Awash Bank">Awash</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modalNewJob')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="submitNewJobFile()" class="px-4 py-2 text-xs font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg shadow-xs">
+          Open Blue File Jacket
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: PRINTABLE OFFICIAL CLIENT STATEMENT / INVOICE -->
+  <!-- ========================================================================= -->
+  <div id="modalPrintStatement" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Print Actions Header -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3 print:hidden">
+        <span class="text-xs font-bold text-slate-500 uppercase">Official Client Statement Preview</span>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-[#0284c7] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>Print Statement</span>
+          </button>
+          <button onclick="closeModal('modalPrintStatement')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Statement Body -->
+      <div id="printableStatement" class="space-y-6 text-slate-900">
+        <!-- Letterhead Header -->
+        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+          <div>
+            <h1 class="text-xl font-black tracking-tight text-slate-900">NOHADA TRADING PLC</h1>
+            <p class="text-[11px] text-slate-600">Freight Forwarding • Customs Transit • Logistics Management</p>
+            <p class="text-[11px] text-slate-500">Addis Ababa, Mercato Ras Sosa Building #304 | Tel: +251 91 152 5317</p>
+            <p class="text-[11px] text-slate-500">TIN: 0097470800</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-black bg-slate-900 text-white px-2.5 py-1 rounded">STATEMENT OF ACCOUNT</span>
+            <p class="text-xs font-bold mt-2 text-slate-700">Date: <span id="stmtDate">23/11/2026</span></p>
+            <p class="text-xs text-slate-500">File Ref: <strong id="stmtFileRef">ABM00240/26</strong></p>
+          </div>
+        </div>
+
+        <!-- Client & Cargo Info -->
+        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg text-xs border border-slate-200">
+          <div>
+            <span class="font-bold uppercase text-slate-500 block text-[10px]">Client / Consignee:</span>
+            <strong class="text-sm text-slate-900" id="stmtClientName">BILAL SADIK YASIN</strong>
+            <p class="text-slate-600" id="stmtClientInfo">TIN: 0107735519 | Tel: 0951448385</p>
+            <p class="text-slate-600" id="stmtClientAddress">Kolfe Keraniyo, Addis Ababa</p>
+          </div>
+          <div>
+            <span class="font-bold uppercase text-slate-500 block text-[10px]">Shipment Details:</span>
+            <p>B/L: <strong id="stmtBl">ZSN0899042</strong> | Port: <strong id="stmtPort">MOJ (Mojo)</strong></p>
+            <p>Container: <strong id="stmtContainer">TEMU3176663 (20GP)</strong></p>
+            <p>Cargo: <strong id="stmtCargo">Ready Made Garments (93 Pkgs)</strong></p>
+          </div>
+        </div>
+
+        <!-- Statement Table -->
+        <table class="w-full text-xs border-collapse">
+          <thead>
+            <tr class="border-b-2 border-slate-900 bg-slate-100 text-slate-800">
+              <th class="py-2 text-left">DESCRIPTION</th>
+              <th class="py-2 text-right">DISBURSED EXPENSE (ETB)</th>
+              <th class="py-2 text-right">DEPOSITED CASH (ETB)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200" id="stmtTableBody">
+            <!-- Dynamically injected via JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Security CPO Note -->
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900" id="stmtCpoNoteContainer">
+          <span id="stmtCpoNote"><strong>Security Guarantee Note:</strong> CPO Guarantee is currently HELD for empty container return guarantee and will be released immediately upon interchange verification.</span>
+        </div>
+
+        <!-- Signatures -->
+        <div class="grid grid-cols-2 gap-8 pt-8 text-xs border-t border-slate-200">
+          <div>
+            <p class="font-bold text-slate-700">Prepared By (Staff):</p>
+            <p class="mt-6 border-b border-slate-400 w-48"></p>
+            <p class="text-[11px] text-slate-500 mt-1" id="stmtStaffName">Imran - Operations Head</p>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-slate-700">Client Acknowledgment:</p>
+            <p class="mt-6 border-b border-slate-400 w-48 ml-auto"></p>
+            <p class="text-[11px] text-slate-500 mt-1" id="stmtClientSignName">Bilal Sadik Yasin / Representative</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="/js/app.js"></script>
+</body>
+</html>
