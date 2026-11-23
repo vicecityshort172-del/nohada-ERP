@@ -381,93 +381,120 @@
 
         </div>
 
-        <!-- DRY PORT CORRIDOR DISPATCH OVERVIEW (3 Clean White Cards) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Corridor 1: Mojo Dry Port -->
-          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('MOJ')">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                <span class="font-extrabold text-sm text-slate-800">Mojo Dry Port (MOJ)</span>
-              </div>
-              <span class="bg-sky-50 text-sky-800 font-bold text-[11px] px-2 py-0.5 rounded border border-sky-100">Primary Corridor</span>
+        <!-- DRY PORT CORRIDOR DISPATCH REGISTRY TABLE -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-slate-100 gap-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="truck" class="w-4 h-4 text-[#0284c7]"></i>
+              <h2 class="font-bold text-sm text-slate-900">Dry Port Corridor & Inland Dispatch Registry</h2>
             </div>
-            <div class="mt-4 space-y-2 text-xs">
-              <div class="flex justify-between text-slate-600">
-                <span>Active Containers:</span>
-                <strong class="text-slate-900 font-black text-sm">12 Containers</strong>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Key Clearance Files:</span>
-                <span class="font-bold text-sky-700">Bilal Sadik, Said Jemal, Baharu</span>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Corridor Route:</span>
-                <span class="text-slate-700 font-medium">Djibouti ➔ Dewele (DDL02) ➔ Mojo</span>
-              </div>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
-              <span>Filter Mojo Shipments</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </div>
+            <span class="text-xs text-slate-500 font-medium">Click any corridor row to filter active shipments</span>
           </div>
 
-          <!-- Corridor 2: Kality Dry Port -->
-          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('KAL')">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-sky-500"></span>
-                <span class="font-extrabold text-sm text-slate-800">Kality Dry Port (KAL)</span>
-              </div>
-              <span class="bg-indigo-50 text-indigo-800 font-bold text-[11px] px-2 py-0.5 rounded border border-indigo-100">Addis Direct</span>
-            </div>
-            <div class="mt-4 space-y-2 text-xs">
-              <div class="flex justify-between text-slate-600">
-                <span>Active Containers:</span>
-                <strong class="text-slate-900 font-black text-sm">4 Containers</strong>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Key Clearance Files:</span>
-                <span class="font-bold text-sky-700">Wesen Ahmed, Factory Shipments</span>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Customs Inspection:</span>
-                <span class="text-slate-700 font-medium">Addis Direct Delivery Check</span>
-              </div>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
-              <span>Filter Kality Shipments</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </div>
-          </div>
+          <div class="overflow-x-auto">
+            <table class="custom-table text-xs">
+              <thead>
+                <tr>
+                  <th>DRY PORT / CORRIDOR</th>
+                  <th>CLASSIFICATION</th>
+                  <th>ACTIVE CONTAINERS</th>
+                  <th>CORRIDOR ROUTE & TERMINAL</th>
+                  <th>KEY ACTIVE CLIENT FILES</th>
+                  <th class="text-right">ACTION</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="filterByPortAndSwitch('MOJ')">
+                  <td>
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                      <div>
+                        <strong class="text-slate-900 font-bold block">Mojo Dry Port (MOJ)</strong>
+                        <span class="text-[10px] text-slate-400">Main Ethiopian Freight Hub</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="bg-sky-50 text-sky-800 font-bold text-[11px] px-2.5 py-0.5 rounded border border-sky-100">Primary Corridor</span>
+                  </td>
+                  <td>
+                    <span class="font-extrabold text-slate-900 text-sm">12</span> <span class="text-slate-500 font-medium text-[11px]">Containers</span>
+                  </td>
+                  <td class="text-slate-600 font-medium">
+                    Djibouti ➔ Dewele (DDL02) ➔ Mojo
+                  </td>
+                  <td>
+                    <span class="font-semibold text-sky-700">Bilal Sadik, Said Jemal, Baharu</span>
+                  </td>
+                  <td class="text-right">
+                    <button class="bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold px-3 py-1 rounded text-xs inline-flex items-center gap-1 transition">
+                      <span>Filter MOJ</span>
+                      <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </button>
+                  </td>
+                </tr>
 
-          <!-- Corridor 3: Dewele / Djibouti -->
-          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 transition cursor-pointer" onclick="filterByPortAndSwitch('DDL')">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                <span class="font-extrabold text-sm text-slate-800">Dewele / Djibouti (DDL)</span>
-              </div>
-              <span class="bg-amber-50 text-amber-800 font-bold text-[11px] px-2 py-0.5 rounded border border-amber-100">Cross-Border</span>
-            </div>
-            <div class="mt-4 space-y-2 text-xs">
-              <div class="flex justify-between text-slate-600">
-                <span>Cross-Border Transit:</span>
-                <strong class="text-slate-900 font-black text-sm">2 Shipments</strong>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Port Terminal:</span>
-                <span class="font-bold text-slate-700">Doraleh Container Terminal (DCT)</span>
-              </div>
-              <div class="flex justify-between text-slate-600">
-                <span>Empty Return Status:</span>
-                <span class="text-emerald-700 font-bold">Interchange Receipts Pending</span>
-              </div>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-600 font-semibold">
-              <span>Filter Cross-Border Shipments</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </div>
+                <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="filterByPortAndSwitch('KAL')">
+                  <td>
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0"></span>
+                      <div>
+                        <strong class="text-slate-900 font-bold block">Kality Dry Port (KAL)</strong>
+                        <span class="text-[10px] text-slate-400">Addis Ababa Metropolitan Terminal</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="bg-indigo-50 text-indigo-800 font-bold text-[11px] px-2.5 py-0.5 rounded border border-indigo-100">Addis Direct</span>
+                  </td>
+                  <td>
+                    <span class="font-extrabold text-slate-900 text-sm">4</span> <span class="text-slate-500 font-medium text-[11px]">Containers</span>
+                  </td>
+                  <td class="text-slate-600 font-medium">
+                    Addis Direct Delivery Check
+                  </td>
+                  <td>
+                    <span class="font-semibold text-sky-700">Wesen Ahmed, Factory Shipments</span>
+                  </td>
+                  <td class="text-right">
+                    <button class="bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold px-3 py-1 rounded text-xs inline-flex items-center gap-1 transition">
+                      <span>Filter KAL</span>
+                      <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="filterByPortAndSwitch('DDL')">
+                  <td>
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                      <div>
+                        <strong class="text-slate-900 font-bold block">Dewele / Djibouti (DDL)</strong>
+                        <span class="text-[10px] text-slate-400">Cross-Border Gateway Terminal</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="bg-amber-50 text-amber-800 font-bold text-[11px] px-2.5 py-0.5 rounded border border-amber-100">Cross-Border</span>
+                  </td>
+                  <td>
+                    <span class="font-extrabold text-slate-900 text-sm">2</span> <span class="text-slate-500 font-medium text-[11px]">Shipments</span>
+                  </td>
+                  <td class="text-slate-600 font-medium">
+                    Doraleh Container Terminal (DCT) • Interchange Pending
+                  </td>
+                  <td>
+                    <span class="font-semibold text-emerald-700">Cross-Border Escorts</span>
+                  </td>
+                  <td class="text-right">
+                    <button class="bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold px-3 py-1 rounded text-xs inline-flex items-center gap-1 transition">
+                      <span>Filter DDL</span>
+                      <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
