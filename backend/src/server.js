@@ -419,6 +419,69 @@ app.delete('/api/jobs/:id', (req, res) => {
   res.json({ success: true, message: 'Job deleted successfully' });
 });
 
+// 4e. Update Job Progress Stage (1 to 7)
+app.put('/api/jobs/:id/stage', (req, res) => {
+  const db = readDB();
+  const idOrRef = req.params.id;
+  const { stage } = req.body;
+  const stageNum = Math.max(1, Math.min(7, Number(stage) || 1));
+
+  const job = db.jobs.find(j => j.id === idOrRef || j.fileRefNumber === idOrRef);
+  if (!job) {
+    return res.status(404).json({ error: 'Job file not found' });
+  }
+
+  job.statusStep = stageNum;
+
+  // Sync human-readable status
+  const stageNames = {
+    1: 'Doc Received',
+    2: 'At Djibouti',
+    3: 'In Transit',
+    4: 'Customs Check',
+    5: 'Tax Paid',
+    6: 'Cleared',
+    7: 'Cleared'
+  };
+  job.status = stageNames[stageNum] || job.status;
+
+  writeDB(db);
+  res.json({ success: true, job });
+});
+
+// 4f. Update Job Customs Tax Assessment Notice (from eCMS or Tax Estimator)
+app.put('/api/jobs/:id/tax-assessment', (req, res) => {
+  const db = readDB();
+  const idOrRef = req.params.id;
+  const { decNumber, receiptNo, mode, duty, excise, surtax, socialWelfare, vat, withholding, totalTaxPaid } = req.body;
+
+  const job = db.jobs.find(j => j.id === idOrRef || j.fileRefNumber === idOrRef);
+  if (!job) {
+    return res.status(404).json({ error: 'Job file not found' });
+  }
+
+  if (!job.declaration) job.declaration = {};
+  if (decNumber) job.declaration.decNumber = decNumber;
+  if (!job.declaration.taxBreakdown) job.declaration.taxBreakdown = {};
+
+  const tax = job.declaration.taxBreakdown;
+  if (receiptNo !== undefined) tax.receiptNo = receiptNo;
+  if (mode !== undefined) tax.mode = mode;
+  if (duty !== undefined) tax.importDuty = Number(duty) || 0;
+  if (excise !== undefined) tax.exciseTax = Number(excise) || 0;
+  if (surtax !== undefined) tax.surtax = Number(surtax) || 0;
+  if (socialWelfare !== undefined) tax.socialWelfareTax = Number(socialWelfare) || 0;
+  if (vat !== undefined) tax.vat = Number(vat) || 0;
+  if (withholding !== undefined) tax.withholdingTax = Number(withholding) || 0;
+
+  const calculatedTotal = (tax.importDuty || 0) + (tax.exciseTax || 0) + (tax.surtax || 0) + (tax.socialWelfareTax || 0) + (tax.vat || 0) + (tax.withholdingTax || 0);
+  tax.totalTaxPaid = Number(totalTaxPaid) || calculatedTotal;
+  job.declaration.customsTaxTotal = tax.totalTaxPaid;
+
+  writeDB(db);
+  res.json({ success: true, declaration: job.declaration });
+});
+
 // 5. Add Deposit / CPO
 app.post('/api/cpo/deposit', (req, res) => {
   const db = readDB();

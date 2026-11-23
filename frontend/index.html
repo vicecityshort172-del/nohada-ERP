@@ -154,13 +154,9 @@
             <p class="text-xs text-slate-500 mt-1">Nohada Trading PLC • Customs Clearing, Inland Freight & Multi-Bank Settlement System</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="openDepositModal()" class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span>New Deposit / CPO</span>
-            </button>
             <button onclick="switchView('newjob')" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
               <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
-              <span>New Job File</span>
+              <span>Open New Job File</span>
             </button>
           </div>
         </div>
@@ -881,56 +877,25 @@
           </div>
         </div>
 
-        <!-- 7-STAGE PIPELINE STEPPER -->
+        <!-- 7-STAGE PIPELINE STEPPER (Dynamic & Interactive for Every File) -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <i data-lucide="git-commit" class="w-4 h-4 text-sky-600"></i>
-            <span>Live Shipment & Clearance Progress</span>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-100 pb-3">
+            <div class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="git-commit" class="w-4 h-4 text-sky-600"></i>
+              <span>Live Shipment & Clearance Progress</span>
+              <span id="cockpitCurrentStageBadge" class="text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-0.5 rounded-full ml-1">Stage 2: At Djibouti</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-slate-500 hidden md:inline">Click any stage to update:</span>
+              <button onclick="advanceCockpitStage()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-bold px-3 py-1 rounded-lg flex items-center gap-1 shadow-xs transition">
+                <span>Advance to Next Stage</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-            <!-- Stage 1 -->
-            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
-              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-bold text-[11px]">1. Doc Received</div>
-              <div class="text-[10px] text-emerald-700 mt-0.5">18/11/2026</div>
-            </div>
-            <!-- Stage 2 -->
-            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
-              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-bold text-[11px]">2. At Djibouti</div>
-              <div class="text-[10px] text-emerald-700 mt-0.5">CMA CGM BAHIA</div>
-            </div>
-            <!-- Stage 3 -->
-            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
-              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-bold text-[11px]">3. Mojo Transit</div>
-              <div class="text-[10px] text-emerald-700 mt-0.5">Truck DDL02</div>
-            </div>
-            <!-- Stage 4 -->
-            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
-              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-bold text-[11px]">4. eCMS Declared</div>
-              <div class="text-[10px] text-emerald-700 mt-0.5">Dec: 4-25530</div>
-            </div>
-            <!-- Stage 5 -->
-            <div class="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-center">
-              <div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-bold text-[11px]">5. Tax Paid</div>
-              <div class="text-[10px] text-emerald-700 mt-0.5">268,010.72 ETB</div>
-            </div>
-            <!-- Stage 6 -->
-            <div class="p-2.5 rounded-lg border border-emerald-400 bg-emerald-100 text-emerald-950 text-center ring-2 ring-emerald-500">
-              <div class="stepper-circle bg-emerald-700 text-white mx-auto mb-1.5">✓</div>
-              <div class="font-black text-[11px]">6. Cargo Cleared</div>
-              <div class="text-[10px] text-emerald-800 mt-0.5">Released Mojo</div>
-            </div>
-            <!-- Stage 7 -->
-            <div class="p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-center">
-              <div class="stepper-circle bg-amber-500 text-white mx-auto mb-1.5">7</div>
-              <div class="font-bold text-[11px]">7. Interchange</div>
-              <div class="text-[10px] text-amber-700 mt-0.5">Pending Box Return</div>
-            </div>
+          <!-- Dynamic Stepper Grid (Populated via renderCockpitStepper(job)) -->
+          <div id="cockpitStepperContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
           </div>
         </div>
 
@@ -942,8 +907,9 @@
           <button onclick="switchCockpitTab('documents')" id="cockpit-tab-documents" class="px-4 py-2 font-bold text-xs rounded-t-lg text-slate-600 hover:bg-slate-100">
             📄 10-Point Document Vault (eCMS)
           </button>
-          <button onclick="switchCockpitTab('assessment')" id="cockpit-tab-assessment" class="px-4 py-2 font-bold text-xs rounded-t-lg text-slate-600 hover:bg-slate-100">
-            🏛️ Customs Tax Breakdown (268k)
+          <button onclick="switchCockpitTab('assessment')" id="cockpit-tab-assessment" class="px-4 py-2 font-bold text-xs rounded-t-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="receipt-text" class="w-3.5 h-3.5"></i>
+            <span>🏛️ Customs Assessment & Tax Breakdown</span>
           </button>
         </div>
 
@@ -1076,12 +1042,26 @@
         <!-- TAB 3: CUSTOMS ASSESSMENT NOTICE (268,010.72 ETB Breakdown) -->
         <div id="cockpit-content-assessment" class="space-y-4 hidden">
           <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-            <div class="border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+            <div class="border-b border-slate-200 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 class="text-sm font-bold text-slate-900">Ethiopian Customs Assessment Notice Details</h3>
-                <span class="text-xs text-slate-500">Declaration No: <strong>4-25530/2026</strong> | Receipt: <strong>MOJ00-R-59983</strong> | Mode: <strong>CASH</strong></span>
+                <span class="text-xs text-slate-500">
+                  Declaration No: <strong id="assessmentDecNo" class="text-slate-800">4-25530/2026</strong> | 
+                  Receipt: <strong id="assessmentReceiptNo" class="text-slate-800">MOJ00-R-59983</strong> | 
+                  Mode: <strong id="assessmentMode" class="text-slate-800">CASH</strong>
+                </span>
               </div>
-              <span class="badge-pill badge-paid">PAID IN FULL</span>
+              <div class="flex items-center gap-2">
+                <button onclick="importFromTaxEstimatorToCockpit()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition" title="Copy calculated values from Customs Tax Estimator (TAX.xlsx)">
+                  <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                  <span>Import from Tax Estimator</span>
+                </button>
+                <button onclick="openEditAssessmentModal()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                  <span>Edit Assessment</span>
+                </button>
+                <span id="assessmentStatusBadge" class="badge-pill badge-paid">PAID IN FULL</span>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1097,37 +1077,37 @@
                 <tbody>
                   <tr>
                     <td><span class="font-bold text-sky-700">01</span></td>
-                    <td>Import Customs Tax</td>
-                    <td class="text-right font-semibold">114,552.90</td>
+                    <td>Import Customs Tax (Duty)</td>
+                    <td class="text-right font-semibold" id="taxNoticeImport">114,552.90</td>
                   </tr>
                   <tr>
                     <td><span class="font-bold text-sky-700">03</span></td>
                     <td>Excise Tax</td>
-                    <td class="text-right font-semibold">20,987.75</td>
+                    <td class="text-right font-semibold" id="taxNoticeExcise">20,987.75</td>
                   </tr>
                   <tr>
                     <td><span class="font-bold text-sky-700">05</span></td>
                     <td>Goods Liable to 10% Surtax</td>
-                    <td class="text-right font-semibold">46,283.40</td>
+                    <td class="text-right font-semibold" id="taxNoticeSurtax">46,283.40</td>
                   </tr>
                   <tr>
                     <td><span class="font-bold text-sky-700">12</span></td>
                     <td>Social Welfare Tax (3%)</td>
-                    <td class="text-right font-semibold">0.00</td>
+                    <td class="text-right font-semibold" id="taxNoticeSocial">0.00</td>
                   </tr>
                   <tr>
                     <td><span class="font-bold text-sky-700">04</span></td>
                     <td>Value Added Tax (15% VAT)</td>
-                    <td class="text-right font-semibold">76,367.85</td>
+                    <td class="text-right font-semibold" id="taxNoticeVat">76,367.85</td>
                   </tr>
                   <tr>
                     <td><span class="font-bold text-sky-700">15</span></td>
                     <td>Withholding Tax (3%)</td>
-                    <td class="text-right font-semibold">9,818.82</td>
+                    <td class="text-right font-semibold" id="taxNoticeWht">9,818.82</td>
                   </tr>
                   <tr class="bg-emerald-50 font-black text-emerald-900 border-t-2 border-emerald-300">
                     <td colspan="2">TOTAL CUSTOMS DUTY & TAX PAID</td>
-                    <td class="text-right text-base">268,010.72 ETB</td>
+                    <td class="text-right text-base" id="taxNoticeTotal">268,010.72 ETB</td>
                   </tr>
                 </tbody>
               </table>
@@ -1934,6 +1914,90 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDIT / ENTER CUSTOMS ASSESSMENT NOTICE -->
+  <!-- ========================================================================= -->
+  <div id="modalEditAssessment" class="modal-overlay hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="receipt-text" class="w-5 h-5 text-sky-600"></i>
+          <h3 class="font-bold text-sm text-slate-900">Customs Assessment Notice (eCMS Details)</h3>
+        </div>
+        <button onclick="closeModal('modalEditAssessment')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Declaration No. *</label>
+            <input type="text" id="editDecNumber" placeholder="e.g. 4-25530/2026" class="w-full border border-slate-300 rounded px-3 py-2 font-mono font-bold text-slate-800">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Receipt No.</label>
+            <input type="text" id="editReceiptNo" placeholder="e.g. MOJ00-R-59983" class="w-full border border-slate-300 rounded px-3 py-2 font-mono text-slate-800">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Payment Mode</label>
+            <select id="editPaymentMode" class="w-full border border-slate-300 rounded px-3 py-2 bg-white">
+              <option value="CASH">CASH / Bank Deposit</option>
+              <option value="Telebirr / e-Payment">Telebirr / e-Payment</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Import Customs Duty (01)</label>
+            <input type="number" id="editDuty" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2 font-semibold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Excise Tax (03)</label>
+            <input type="number" id="editExcise" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Surtax 10% (05)</label>
+            <input type="number" id="editSurtax" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Social Welfare Tax 3% (12)</label>
+            <input type="number" id="editSocialWelfare" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">VAT 15% (04)</label>
+            <input type="number" id="editVat" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2 font-semibold">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Withholding Tax 3% (15)</label>
+          <input type="number" id="editWithholding" placeholder="0" class="w-full border border-slate-300 rounded px-3 py-2">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+        <button onclick="calculateModalAssessmentTotal()" class="text-xs text-sky-700 font-bold hover:underline">
+          Recalculate Sum
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeModal('modalEditAssessment')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button onclick="submitAssessmentUpdate()" class="px-4 py-2 text-xs font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg shadow-xs">
+            Save Assessment
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

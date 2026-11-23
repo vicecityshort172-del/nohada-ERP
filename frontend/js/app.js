@@ -393,6 +393,12 @@ async function loadJobCockpit(jobId = 'ABM00240-26') {
     // Populate 10-Point Document Checklist
     renderCockpitDocuments(job.documents || []);
 
+    // Populate Dynamic Interactive 7-Stage Stepper
+    renderCockpitStepper(job);
+
+    // Populate Dynamic Customs Assessment & Tax Breakdown
+    renderCockpitTaxAssessment(job);
+
     refreshIcons();
   } catch (err) {
     console.error('Error loading cockpit:', err);
@@ -561,6 +567,242 @@ function renderCockpitDocuments(docs) {
     `;
     container.appendChild(card);
   });
+}
+
+// -----------------------------------------------------------------------------
+// 3b. INTERACTIVE 7-STAGE PIPELINE ENGINE
+// -----------------------------------------------------------------------------
+const STAGES_CONFIG = [
+  { step: 1, title: '1. Doc Received', getSub: j => (j.documents ? `${j.documents.filter(d=>d.status==='verified').length}/10 Docs` : 'Verified') },
+  { step: 2, title: '2. At Djibouti', getSub: j => (j.vesselName ? j.vesselName.split(' ')[0] + ' ' + (j.vesselName.split(' ')[1] || '') : 'Discharged') },
+  { step: 3, title: '3. Mojo Transit', getSub: j => `${j.operationPort || 'MOJ'} Dry Port` },
+  { step: 4, title: '4. eCMS Declared', getSub: j => (j.declaration?.decNumber ? j.declaration.decNumber : 'Dec Pending') },
+  { step: 5, title: '5. Tax Paid', getSub: j => (j.declaration?.taxBreakdown?.totalTaxPaid ? `${Number(j.declaration.taxBreakdown.totalTaxPaid).toLocaleString()} ETB` : 'Assessing') },
+  { step: 6, title: '6. Cargo Cleared', getSub: j => (j.status === 'Cleared' ? 'Released Mojo' : 'Inspection') },
+  { step: 7, title: '7. Interchange', getSub: j => (j.cpoStatus === 'RETURNED' ? 'CPO Returned' : 'Box In-Hand') }
+];
+
+function renderCockpitStepper(job) {
+  const container = document.getElementById('cockpitStepperContainer');
+  if (!container || !job) return;
+  container.innerHTML = '';
+
+  const currentStep = Number(job.statusStep) || (job.status === 'Cleared' ? 6 : 2);
+  const badge = document.getElementById('cockpitCurrentStageBadge');
+  if (badge) {
+    const activeCfg = STAGES_CONFIG[currentStep - 1] || STAGES_CONFIG[1];
+    badge.textContent = `Stage ${currentStep}: ${activeCfg.title.split('. ')[1]}`;
+  }
+
+  STAGES_CONFIG.forEach((cfg) => {
+    const isCompleted = cfg.step < currentStep;
+    const isCurrent = cfg.step === currentStep;
+    const isPending = cfg.step > currentStep;
+
+    const div = document.createElement('div');
+    div.className = `p-2.5 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none hover:shadow-xs ${
+      isCurrent
+        ? 'border-sky-500 bg-sky-50 text-sky-950 ring-2 ring-sky-400 font-bold'
+        : isCompleted
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+        : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+    }`;
+    div.onclick = () => setCockpitStage(cfg.step);
+    div.title = `Click to set progress to Stage ${cfg.step}: ${cfg.title}`;
+
+    const iconHtml = isCompleted
+      ? '<div class="stepper-circle bg-emerald-600 text-white mx-auto mb-1.5 text-xs font-bold">✓</div>'
+      : isCurrent
+      ? `<div class="stepper-circle bg-sky-600 text-white mx-auto mb-1.5 text-xs font-bold ring-2 ring-sky-300">${cfg.step}</div>`
+      : `<div class="stepper-circle bg-slate-300 text-slate-700 mx-auto mb-1.5 text-xs font-bold">${cfg.step}</div>`;
+
+    const subColor = isCurrent ? 'text-sky-700 font-bold' : isCompleted ? 'text-emerald-700' : 'text-slate-400';
+
+    div.innerHTML = `
+      ${iconHtml}
+      <div class="font-bold text-[11px] leading-tight truncate">${cfg.title}</div>
+      <div class="text-[10px] ${subColor} mt-0.5 truncate">${cfg.getSub(job)}</div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function setCockpitStage(stageNum) {
+  if (!activeCockpitJob) return;
+  try {
+    const res = await fetch(`/api/jobs/${activeCockpitJob.id}/stage`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage: stageNum })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      activeCockpitJob.statusStep = stageNum;
+      activeCockpitJob.status = data.job.status;
+      renderCockpitStepper(activeCockpitJob);
+      const statusBadge = document.getElementById('cockpitStatusBadge');
+      if (statusBadge) statusBadge.textContent = activeCockpitJob.status.toUpperCase();
+      await loadDashboardData();
+    }
+  } catch (e) {
+    console.error('Error updating stage:', e);
+  }
+}
+
+async function advanceCockpitStage() {
+  if (!activeCockpitJob) return;
+  const currentStep = Number(activeCockpitJob.statusStep) || 2;
+  if (currentStep >= 7) {
+    alert('This job file is already at the final stage (Interchange / Closed).');
+    return;
+  }
+  await setCockpitStage(currentStep + 1);
+}
+
+// -----------------------------------------------------------------------------
+// 3c. CUSTOMS ASSESSMENT NOTICE & TAX ESTIMATOR INTEGRATION
+// -----------------------------------------------------------------------------
+function renderCockpitTaxAssessment(job) {
+  if (!job) return;
+  const dec = job.declaration || {};
+  const tax = dec.taxBreakdown || {};
+
+  // Headers
+  const decEl = document.getElementById('assessmentDecNo');
+  if (decEl) decEl.textContent = dec.decNumber || 'Pending Dec';
+
+  const rcpEl = document.getElementById('assessmentReceiptNo');
+  if (rcpEl) rcpEl.textContent = tax.receiptNo || 'Pending';
+
+  const modeEl = document.getElementById('assessmentMode');
+  if (modeEl) modeEl.textContent = tax.mode || 'CASH';
+
+  const badgeEl = document.getElementById('assessmentStatusBadge');
+  if (badgeEl) {
+    const isPaid = (job.statusStep >= 5 || job.status === 'Cleared');
+    badgeEl.className = isPaid ? 'badge-pill badge-paid' : 'badge-pill badge-held';
+    badgeEl.textContent = isPaid ? 'PAID IN FULL' : 'ASSESSMENT PENDING';
+  }
+
+  // Row values
+  const duty = Number(tax.importDuty || (job.id === 'ABM00240-26' ? 114552.90 : 0));
+  const excise = Number(tax.exciseTax || (job.id === 'ABM00240-26' ? 20987.75 : 0));
+  const surtax = Number(tax.surtax || (job.id === 'ABM00240-26' ? 46283.40 : 0));
+  const social = Number(tax.socialWelfareTax || 0);
+  const vat = Number(tax.vat || (job.id === 'ABM00240-26' ? 76367.85 : 0));
+  const wht = Number(tax.withholdingTax || (job.id === 'ABM00240-26' ? 9818.82 : 0));
+  const total = Number(tax.totalTaxPaid || (duty + excise + surtax + social + vat + wht));
+
+  if (document.getElementById('taxNoticeImport')) document.getElementById('taxNoticeImport').textContent = duty.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeExcise')) document.getElementById('taxNoticeExcise').textContent = excise.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeSurtax')) document.getElementById('taxNoticeSurtax').textContent = surtax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeSocial')) document.getElementById('taxNoticeSocial').textContent = social.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeVat')) document.getElementById('taxNoticeVat').textContent = vat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeWht')) document.getElementById('taxNoticeWht').textContent = wht.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('taxNoticeTotal')) document.getElementById('taxNoticeTotal').textContent = `${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB`;
+
+  // Blue jacket header tax total sync
+  const headerTax = document.getElementById('cockpitCustomsTax');
+  if (headerTax) headerTax.textContent = `${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB`;
+}
+
+function openEditAssessmentModal() {
+  if (!activeCockpitJob) return;
+  const dec = activeCockpitJob.declaration || {};
+  const tax = dec.taxBreakdown || {};
+
+  document.getElementById('editDecNumber').value = dec.decNumber || '4-25530/2026';
+  document.getElementById('editReceiptNo').value = tax.receiptNo || 'MOJ00-R-59983';
+  document.getElementById('editPaymentMode').value = tax.mode || 'CASH';
+  document.getElementById('editDuty').value = tax.importDuty || (activeCockpitJob.id === 'ABM00240-26' ? 114552.90 : 0);
+  document.getElementById('editExcise').value = tax.exciseTax || (activeCockpitJob.id === 'ABM00240-26' ? 20987.75 : 0);
+  document.getElementById('editSurtax').value = tax.surtax || (activeCockpitJob.id === 'ABM00240-26' ? 46283.40 : 0);
+  document.getElementById('editSocialWelfare').value = tax.socialWelfareTax || 0;
+  document.getElementById('editVat').value = tax.vat || (activeCockpitJob.id === 'ABM00240-26' ? 76367.85 : 0);
+  document.getElementById('editWithholding').value = tax.withholdingTax || (activeCockpitJob.id === 'ABM00240-26' ? 9818.82 : 0);
+
+  document.getElementById('modalEditAssessment').classList.remove('hidden');
+}
+
+function calculateModalAssessmentTotal() {
+  const duty = Number(document.getElementById('editDuty').value) || 0;
+  const excise = Number(document.getElementById('editExcise').value) || 0;
+  const surtax = Number(document.getElementById('editSurtax').value) || 0;
+  const social = Number(document.getElementById('editSocialWelfare').value) || 0;
+  const vat = Number(document.getElementById('editVat').value) || 0;
+  const wht = Number(document.getElementById('editWithholding').value) || 0;
+  const sum = duty + excise + surtax + social + vat + wht;
+  alert(`Calculated Total Customs Tax: ${sum.toLocaleString()} ETB`);
+  return sum;
+}
+
+async function submitAssessmentUpdate() {
+  if (!activeCockpitJob) return;
+  const decNumber = document.getElementById('editDecNumber').value.trim();
+  const receiptNo = document.getElementById('editReceiptNo').value.trim();
+  const mode = document.getElementById('editPaymentMode').value;
+  const duty = Number(document.getElementById('editDuty').value) || 0;
+  const excise = Number(document.getElementById('editExcise').value) || 0;
+  const surtax = Number(document.getElementById('editSurtax').value) || 0;
+  const socialWelfare = Number(document.getElementById('editSocialWelfare').value) || 0;
+  const vat = Number(document.getElementById('editVat').value) || 0;
+  const withholding = Number(document.getElementById('editWithholding').value) || 0;
+  const totalTaxPaid = duty + excise + surtax + socialWelfare + vat + withholding;
+
+  try {
+    const res = await fetch(`/api/jobs/${activeCockpitJob.id}/tax-assessment`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decNumber, receiptNo, mode, duty, excise, surtax, socialWelfare, vat, withholding, totalTaxPaid })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      activeCockpitJob.declaration = data.declaration;
+      closeModal('modalEditAssessment');
+      renderCockpitTaxAssessment(activeCockpitJob);
+      renderCockpitStepper(activeCockpitJob);
+      alert('✅ Customs Assessment Notice updated successfully!');
+    }
+  } catch (e) {
+    console.error('Error saving tax assessment:', e);
+  }
+}
+
+// Import values from Customs Tax Estimator (TAX.xlsx) into this job!
+async function importFromTaxEstimatorToCockpit() {
+  if (!activeCockpitJob) return;
+  if (!confirm(`Import calculated tax breakdown from the Tax Estimator into file ${activeCockpitJob.fileRefNumber}?`)) return;
+
+  // Read calculated values from the active tax estimation calculator
+  const duty = Number((document.getElementById('taxGrandDuty')?.textContent || '0').replace(/,/g, '')) || 0;
+  const excise = Number((document.getElementById('taxGrandExcise')?.textContent || '0').replace(/,/g, '')) || 0;
+  const surtax = Number((document.getElementById('taxGrandSurtax')?.textContent || '0').replace(/,/g, '')) || 0;
+  const vat = Number((document.getElementById('taxGrandVat')?.textContent || '0').replace(/,/g, '')) || 0;
+  const withholding = Number((document.getElementById('taxGrandWht')?.textContent || '0').replace(/,/g, '')) || 0;
+  const totalTaxPaid = duty + excise + surtax + vat + withholding;
+
+  try {
+    const res = await fetch(`/api/jobs/${activeCockpitJob.id}/tax-assessment`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        decNumber: activeCockpitJob.declaration?.decNumber || `DEC-${activeCockpitJob.blNumber}`,
+        receiptNo: 'ESTIMATOR-CALC',
+        mode: 'Telebirr / e-Payment',
+        duty, excise, surtax, socialWelfare: 0, vat, withholding, totalTaxPaid
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      activeCockpitJob.declaration = data.declaration;
+      renderCockpitTaxAssessment(activeCockpitJob);
+      renderCockpitStepper(activeCockpitJob);
+      alert(`✅ Successfully imported ${totalTaxPaid.toLocaleString()} ETB estimated tax into ${activeCockpitJob.fileRefNumber}!`);
+    }
+  } catch (e) {
+    console.error('Error importing tax:', e);
+  }
 }
 
 // -----------------------------------------------------------------------------
