@@ -39,12 +39,10 @@
       <!-- Brand Logo Header -->
       <div class="p-4 flex items-center justify-between border-b border-slate-800/80">
         <div class="flex items-center gap-3">
-          <div class="sidebar-logo-box">
-            <i data-lucide="layers" class="w-5 h-5 text-white"></i>
-          </div>
+          <img src="/assets/logo.png" alt="Nohada Logo" class="w-10 h-10 rounded-xl object-contain shadow-md border border-amber-500/30 bg-slate-900/60 p-0.5">
           <div class="flex flex-col">
             <span class="text-white font-extrabold text-sm tracking-wider uppercase">Nohada Trading</span>
-            <span class="text-sky-400 font-bold text-[10px] tracking-wider uppercase">Logistics & ERP</span>
+            <span class="text-amber-400 font-bold text-[10px] tracking-wider uppercase">Logistics & ERP</span>
           </div>
         </div>
         <!-- Close button for mobile -->
@@ -1855,90 +1853,133 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL: PRINTABLE OFFICIAL CLIENT STATEMENT / INVOICE -->
+  <!-- MODAL: PRINTABLE OFFICIAL CLIENT STATEMENT / INVOICE (Wise Digital Style) -->
   <!-- ========================================================================= -->
   <div id="modalPrintStatement" class="modal-overlay hidden">
-    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 space-y-4 max-h-[95vh] overflow-y-auto">
       
-      <!-- Print Actions Header -->
+      <!-- Print Actions Header (Hidden in Print) -->
       <div class="flex items-center justify-between border-b border-slate-200 pb-3 print:hidden">
-        <span class="text-xs font-bold text-slate-500 uppercase">Official Client Statement Preview</span>
         <div class="flex items-center gap-2">
-          <button onclick="window.print()" class="bg-[#0284c7] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs">
+          <i data-lucide="printer" class="w-4 h-4 text-[#0284c7]"></i>
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Official Clearance Statement & Invoice Preview</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-            <span>Print Statement</span>
+            <span>Print Invoice</span>
           </button>
-          <button onclick="closeModal('modalPrintStatement')" class="text-slate-400 hover:text-slate-600">
+          <button onclick="closeModal('modalPrintStatement')" class="text-slate-400 hover:text-slate-600 p-1">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
 
-      <!-- Printable Statement Body -->
-      <div id="printableStatement" class="space-y-6 text-slate-900">
-        <!-- Letterhead Header -->
-        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-          <div>
-            <h1 class="text-xl font-black tracking-tight text-slate-900">NOHADA TRADING PLC</h1>
-            <p class="text-[11px] text-slate-600">Freight Forwarding • Customs Transit • Logistics Management</p>
-            <p class="text-[11px] text-slate-500">Addis Ababa, Mercato Ras Sosa Building #304 | Tel: +251 91 152 5317</p>
-            <p class="text-[11px] text-slate-500">TIN: 0097470800</p>
+      <!-- Printable Statement Body (Exact Image 2 Style) -->
+      <div id="printableStatement" class="space-y-4 text-slate-900 bg-white p-2">
+        
+        <!-- Header Grid: Logo & TIN (Left) | Amharic & English Header (Center) | Date & No (Right) -->
+        <div class="flex items-start justify-between border-b border-black pb-3">
+          <!-- Top Left: Logo & TIN -->
+          <div class="flex flex-col items-start w-1/4">
+            <img src="/assets/logo.png" alt="Nohada Logo" class="w-16 h-16 rounded-full object-contain border border-slate-400 p-1 shadow-xs bg-white">
+            <span class="text-[11px] font-bold text-slate-900 mt-1 whitespace-nowrap">Tin Number: 0097470800</span>
           </div>
-          <div class="text-right">
-            <span class="text-xs font-black bg-slate-900 text-white px-2.5 py-1 rounded">STATEMENT OF ACCOUNT</span>
-            <p class="text-xs font-bold mt-2 text-slate-700">Date: <span id="stmtDate">23/11/2026</span></p>
-            <p class="text-xs text-slate-500">File Ref: <strong id="stmtFileRef">ABM00240/26</strong></p>
+
+          <!-- Top Center: Amharic & English Header & Proforma Title -->
+          <div class="text-center flex-1 px-2">
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight font-serif">ኖሀዳ ትሬዲንግ ኃ/የተ/የግ/ማ</h1>
+            <h2 class="text-base font-bold text-slate-900 tracking-wide mt-0.5">Nohada Trading P.L.C.</h2>
+            <p class="text-[11px] text-slate-800 font-medium mt-0.5">
+              ☎ 011-465 15 53 &nbsp; Fax 011-466 14 46 &nbsp; Mob: 0911-52 53 17
+            </p>
+            <div class="mt-2.5">
+              <h3 class="text-base font-bold text-slate-900 tracking-wide uppercase">
+                Proforma / Statement of Account
+              </h3>
+            </div>
+          </div>
+
+          <!-- Top Right: Date & Number -->
+          <div class="w-1/4 text-right text-xs space-y-1.5 pt-1 font-medium text-slate-900">
+            <div>Date: <span id="stmtDate" class="font-bold">2026-11-27</span></div>
+            <div>No: <span id="stmtFileRef" class="font-bold font-mono">PRF-38702</span></div>
           </div>
         </div>
 
-        <!-- Client & Cargo Info -->
-        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg text-xs border border-slate-200">
+        <!-- Customer & Shipment Metadata Block -->
+        <div class="text-xs text-slate-900 space-y-1.5 pt-1">
           <div>
-            <span class="font-bold uppercase text-slate-500 block text-[10px]">Client / Consignee:</span>
-            <strong class="text-sm text-slate-900" id="stmtClientName">BILAL SADIK YASIN</strong>
-            <p class="text-slate-600" id="stmtClientInfo">TIN: 0107735519 | Tel: 0951448385</p>
-            <p class="text-slate-600" id="stmtClientAddress">Kolfe Keraniyo, Addis Ababa</p>
+            <strong>To:</strong> <span id="stmtClientName" class="font-bold text-sm uppercase">BILAL SADIK YASIN</span>
           </div>
-          <div>
-            <span class="font-bold uppercase text-slate-500 block text-[10px]">Shipment Details:</span>
-            <p>B/L: <strong id="stmtBl">ZSN0899042</strong> | Port: <strong id="stmtPort">MOJ (Mojo)</strong></p>
-            <p>Container: <strong id="stmtContainer">TEMU3176663 (20GP)</strong></p>
-            <p>Cargo: <strong id="stmtCargo">Ready Made Garments (93 Pkgs)</strong></p>
+          <div class="flex flex-wrap justify-between items-center text-slate-800">
+            <div>
+              <strong>Plate / B/L Number:</strong> <span id="stmtBl" class="font-bold">ZSN0899042</span> &nbsp;•&nbsp; 
+              <strong>Container:</strong> <span id="stmtContainer" class="font-bold">TEMU3176663 (20GP)</span>
+            </div>
+            <div>
+              <strong>Port:</strong> <span id="stmtPort" class="font-bold">MOJ (Mojo)</span> &nbsp;•&nbsp; 
+              <strong>Tel:</strong> <span id="stmtClientPhone">0951448385</span>
+            </div>
           </div>
         </div>
 
-        <!-- Statement Table -->
-        <table class="w-full text-xs border-collapse">
-          <thead>
-            <tr class="border-b-2 border-slate-900 bg-slate-100 text-slate-800">
-              <th class="py-2 text-left">DESCRIPTION</th>
-              <th class="py-2 text-right">DISBURSED EXPENSE (ETB)</th>
-              <th class="py-2 text-right">DEPOSITED CASH (ETB)</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200" id="stmtTableBody">
-            <!-- Dynamically injected via JavaScript -->
-          </tbody>
-        </table>
-
-        <!-- Security CPO Note -->
-        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900" id="stmtCpoNoteContainer">
-          <span id="stmtCpoNote"><strong>Security Guarantee Note:</strong> CPO Guarantee is currently HELD for empty container return guarantee and will be released immediately upon interchange verification.</span>
+        <!-- Tabular Grid (Dynamic Rows matching Image 2 layout) -->
+        <div class="overflow-x-auto pt-1">
+          <table class="receipt-table" id="stmtReceiptTable">
+            <thead>
+              <tr>
+                <th style="width: 5%">S/N</th>
+                <th style="width: 50%" class="text-left">Description</th>
+                <th style="width: 8%">Unit</th>
+                <th style="width: 7%">Qty</th>
+                <th style="width: 15%" colspan="2">Unit Price</th>
+                <th style="width: 15%" colspan="2">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody id="stmtReceiptTableBody">
+              <!-- Dynamically populated via openPrintStatementModal() in app.js -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- Signatures -->
-        <div class="grid grid-cols-2 gap-8 pt-8 text-xs border-t border-slate-200">
+        <!-- Amount In Words & Delivery Days (Image 2 style) -->
+        <div class="text-xs space-y-1 pt-1 text-slate-900 font-medium">
           <div>
-            <p class="font-bold text-slate-700">Prepared By (Staff):</p>
-            <p class="mt-6 border-b border-slate-400 w-48"></p>
-            <p class="text-[11px] text-slate-500 mt-1" id="stmtStaffName">Imran - Operations Head</p>
+            <strong>Amount in words:</strong> <span id="stmtAmountWords" class="font-bold">Seventeen Thousand Two Hundred Fifty birr</span>
           </div>
-          <div class="text-right">
-            <p class="font-bold text-slate-700">Client Acknowledgment:</p>
-            <p class="mt-6 border-b border-slate-400 w-48 ml-auto"></p>
-            <p class="text-[11px] text-slate-500 mt-1" id="stmtClientSignName">Bilal Sadik Yasin / Representative</p>
+          <div>
+            <strong>Delivery Days / Free Time:</strong> <span id="stmtFreeDays">14 Days</span>
           </div>
         </div>
+
+        <!-- Signatures (Image 2 style) -->
+        <div class="grid grid-cols-2 gap-8 pt-4 text-xs text-slate-900">
+          <div>
+            <p class="font-bold">Prepared By: <span id="stmtStaffName" class="font-normal underline">Imran</span></p>
+            <div class="flex items-center gap-2 mt-4">
+              <span>Signature:</span>
+              <span class="border-b border-black w-48 inline-block"></span>
+            </div>
+          </div>
+          <div class="text-right sm:text-left">
+            <p class="font-bold">Client / Representative Acknowledgment:</p>
+            <div class="flex items-center gap-2 mt-4 sm:justify-start justify-end">
+              <span>Signature:</span>
+              <span class="border-b border-black w-48 inline-block"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- NB / Notes (Image 2 style) -->
+        <div class="text-[11px] text-slate-700 pt-3 border-t border-slate-300 space-y-0.5">
+          <p class="font-bold text-slate-900">NB:</p>
+          <p>1. The validity of this clearance statement / proforma invoice is for 15 days.</p>
+          <p>2. Bank CPO Guarantees will be refunded/released strictly upon presentation of verified Empty Container Interchange Receipt.</p>
+          <p>3. Any storage and demurrage fees incurred beyond the shipping line free time limit are the responsibility of the cargo owner.</p>
+          <p>4. This statement is valid with the official stamp and authorized signature of Nohada Trading PLC.</p>
+        </div>
+
       </div>
 
     </div>

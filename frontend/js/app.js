@@ -1083,117 +1083,214 @@ function renderTaxSpreadsheet(items, totals) {
 // -----------------------------------------------------------------------------
 // 8. PRINT OFFICIAL STATEMENT / INVOICE MODAL
 // -----------------------------------------------------------------------------
+// Helper to convert number to words (English words matching Image 2)
+function numberToWords(amount) {
+  const num = Math.round(Math.abs(Number(amount) || 0));
+  if (num === 0) return 'Zero birr';
+
+  const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  function inWords(n) {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+    if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + inWords(n % 100) : '');
+    if (n < 1000000) return inWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + inWords(n % 1000) : '');
+    if (n < 1000000000) return inWords(Math.floor(n / 1000000)) + ' Million' + (n % 1000000 !== 0 ? ' ' + inWords(n % 1000000) : '');
+    return n.toString();
+  }
+
+  const words = inWords(num);
+  return (amount < 0 ? 'Minus ' : '') + words.trim() + ' birr';
+}
+
 function openPrintStatementModal() {
   const job = activeCockpitJob;
   if (!job) return;
 
   const today = new Date();
-  const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  // Header Meta
   document.getElementById('stmtDate').textContent = dateStr;
-  document.getElementById('stmtFileRef').textContent = job.fileRefNumber;
+  const cleanRef = (job.fileRefNumber || '38702').replace(/[^a-zA-Z0-9]/g, '');
+  document.getElementById('stmtFileRef').textContent = `PRF-${cleanRef}`;
+  
+  // Client & Shipment Meta
   document.getElementById('stmtClientName').textContent = job.consignee?.name || 'BILAL SADIK YASIN';
-  document.getElementById('stmtClientInfo').textContent = `TIN: ${job.consignee?.tin || 'Pending'} | Tel: ${job.consignee?.phone || '-'}`;
-  document.getElementById('stmtClientAddress').textContent = job.consignee?.address || 'Addis Ababa';
-  document.getElementById('stmtBl').textContent = job.blNumber;
-  document.getElementById('stmtPort').textContent = `${job.operationPort} (Dry Port)`;
-  document.getElementById('stmtContainer').textContent = `${job.containerNumber} (${job.containerType || "20' GP"})`;
-  document.getElementById('stmtCargo').textContent = `${job.cargoDescription || 'Commercial Cargo'} (${job.packageQty || '100'} ${job.packageType || 'Pkgs'})`;
-  document.getElementById('stmtStaffName').textContent = job.assignedStaff || 'Imran - Operations Head';
-  document.getElementById('stmtClientSignName').textContent = `${job.consignee?.name || 'Customer'} / Representative`;
+  document.getElementById('stmtBl').textContent = job.blNumber || 'ZSN0899042';
+  document.getElementById('stmtContainer').textContent = `${job.containerNumber || 'TEMU3176663'} (${job.containerType || "20' GP"})`;
+  
+  const tinEl = document.getElementById('stmtClientTin');
+  if (tinEl) tinEl.textContent = job.consignee?.tin || '0107735519';
+  
+  const portEl = document.getElementById('stmtPort');
+  if (portEl) portEl.textContent = `${job.operationPort || 'MOJ'} (${job.operationPort === 'KAL' ? 'Kality' : 'Mojo'})`;
 
-  // Render Table Rows dynamically
-  const tbody = document.getElementById('stmtTableBody');
+  const phoneEl = document.getElementById('stmtClientPhone');
+  if (phoneEl) phoneEl.textContent = job.consignee?.phone || '0951448385';
+
+  const freeDaysEl = document.getElementById('stmtFreeDays');
+  if (freeDaysEl) freeDaysEl.textContent = `${job.freeDaysRemaining || 14} Days`;
+
+  const staffEl = document.getElementById('stmtStaffName');
+  if (staffEl) staffEl.textContent = (job.assignedStaff || 'Imran').split(' ')[0];
+
+  // Table Body - Tabular Grid matching Image 2
+  const tbody = document.getElementById('stmtReceiptTableBody');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
-  let totalOperatingCash = 0;
   let totalExpenses = 0;
+  let totalOperatingCash = 0;
+  let serviceFee = 0;
 
-  // Deposits (Operating Cash)
-  const opDeposits = (job.deposits || []).filter(d => d.category === 'OPERATIONAL_CASH');
-  opDeposits.forEach(dep => {
-    totalOperatingCash += Number(dep.amount) || 0;
+  // 1. SECTION 1: OPERATIONAL EXPENSES & DISBURSEMENTS (Repair / Replace style in Image 2)
+  const headerRow1 = document.createElement('tr');
+  headerRow1.innerHTML = `<td colspan="8" class="receipt-section-header">Operational Disbursements & Port Freight (የተከፈሉ ወጪዎች)</td>`;
+  tbody.appendChild(headerRow1);
+
+  const expenses = job.expenses || [];
+  if (expenses.length === 0) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="py-2 text-slate-800">
-        <span class="font-bold">Client Cash Advance</span> - ${dep.bank} (${dep.purpose || 'Shipment Deposit'})
-      </td>
-      <td class="text-right text-slate-400">-</td>
-      <td class="text-right font-semibold text-emerald-700">${Number(dep.amount).toLocaleString()}.00</td>
+      <td class="text-center">1</td>
+      <td>Initial Port Terminal & Transit Processing Fee</td>
+      <td class="text-center">Job</td>
+      <td class="text-center">1</td>
+      <td class="receipt-money-cell">0</td>
+      <td class="text-center font-mono">00</td>
+      <td class="receipt-money-cell">0</td>
+      <td class="text-center font-mono">00</td>
     `;
     tbody.appendChild(tr);
-  });
+  } else {
+    expenses.forEach((exp, idx) => {
+      const amt = Number(exp.amount) || 0;
+      totalExpenses += amt;
+      if ((exp.category || '').toLowerCase().includes('service')) serviceFee += amt;
 
-  if (opDeposits.length === 0) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="py-2 text-slate-500 italic">No operating advance deposited yet</td>
-      <td class="text-right text-slate-400">-</td>
-      <td class="text-right font-semibold text-slate-500">0.00</td>
-    `;
-    tbody.appendChild(tr);
+      const unit = exp.category === 'Inland Transport' ? 'Trip' : exp.category === 'Port Terminal' ? 'Cont' : 'Job';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="text-center font-bold">${idx + 1}</td>
+        <td><span class="font-bold">${exp.category}:</span> ${exp.description} ${exp.paidTo ? '• ' + exp.paidTo : ''}</td>
+        <td class="text-center">${unit}</td>
+        <td class="text-center">1</td>
+        <td class="receipt-money-cell">${amt.toLocaleString()}</td>
+        <td class="text-center font-mono">00</td>
+        <td class="receipt-money-cell font-bold">${amt.toLocaleString()}</td>
+        <td class="text-center font-mono font-bold">00</td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
-  // Expenses
-  (job.expenses || []).forEach(exp => {
-    totalExpenses += Number(exp.amount) || 0;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="py-2 text-slate-800">
-        <span class="font-bold">${exp.category}</span>: ${exp.description} ${exp.paidTo ? '• ' + exp.paidTo : ''}
-      </td>
-      <td class="text-right font-semibold text-rose-700">${Number(exp.amount).toLocaleString()}.00</td>
-      <td class="text-right text-slate-400">-</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // Totals Row
-  const totalsRow = document.createElement('tr');
-  totalsRow.className = 'bg-slate-100 font-bold border-t-2 border-slate-800';
-  totalsRow.innerHTML = `
-    <td class="py-2 font-black">TOTALS</td>
-    <td class="text-right font-black text-rose-700">${totalExpenses.toLocaleString()}.00 ETB</td>
-    <td class="text-right font-black text-emerald-700">${totalOperatingCash.toLocaleString()}.00 ETB</td>
+  // Disbursements Subtotal Row (Image 2 style)
+  const expSubtotalRow = document.createElement('tr');
+  expSubtotalRow.innerHTML = `
+    <td colspan="6" class="text-right font-bold pr-2 bg-slate-50">Labour / Disbursements Cost (Subtotal)</td>
+    <td class="receipt-money-cell font-bold text-slate-900 bg-slate-50">${totalExpenses.toLocaleString()}</td>
+    <td class="text-center font-mono font-bold bg-slate-50">00</td>
   `;
-  tbody.appendChild(totalsRow);
+  tbody.appendChild(expSubtotalRow);
 
-  // Net Balance Row
-  const netBalance = totalOperatingCash - totalExpenses;
-  const balanceRow = document.createElement('tr');
-  if (netBalance < 0) {
-    balanceRow.className = 'bg-red-50 text-red-900 font-black border-t-2 border-red-400';
-    balanceRow.innerHTML = `
-      <td class="py-3 text-sm uppercase">RECONCILED BALANCE DUE TO NOHADA</td>
-      <td colspan="2" class="text-right text-base text-red-600">${netBalance.toLocaleString()}.00 ETB</td>
+  // 2. SECTION 2: CLIENT ADVANCE DEPOSITS & CPO GUARANTEES
+  const headerRow2 = document.createElement('tr');
+  headerRow2.innerHTML = `<td colspan="8" class="receipt-section-header">Client Deposits & Bank Guarantees (የተያዙ ማስያዣዎች)</td>`;
+  tbody.appendChild(headerRow2);
+
+  const deposits = job.deposits || [];
+  let depCount = 0;
+  deposits.forEach((dep) => {
+    depCount++;
+    const amt = Number(dep.amount) || 0;
+    if (dep.category === 'OPERATIONAL_CASH') {
+      totalOperatingCash += amt;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="text-center font-bold">${depCount}</td>
+        <td><span class="font-bold">Client Operational Cash Advance:</span> ${dep.bank} (${dep.purpose || 'Freight Advance'})</td>
+        <td class="text-center">Cash</td>
+        <td class="text-center">1</td>
+        <td class="receipt-money-cell">${amt.toLocaleString()}</td>
+        <td class="text-center font-mono">00</td>
+        <td class="receipt-money-cell font-bold text-emerald-800">${amt.toLocaleString()}</td>
+        <td class="text-center font-mono font-bold text-emerald-800">00</td>
+      `;
+      tbody.appendChild(tr);
+    } else {
+      // Guarantee CPO
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="text-center font-bold">${depCount}</td>
+        <td><span class="font-bold">Security CPO Guarantee:</span> ${dep.bank} • ${dep.purpose || 'Container Return Guarantee'} [${dep.status}]</td>
+        <td class="text-center">CPO</td>
+        <td class="text-center">1</td>
+        <td class="receipt-money-cell">${amt.toLocaleString()}</td>
+        <td class="text-center font-mono">00</td>
+        <td class="receipt-money-cell font-bold text-amber-700">${dep.status === 'HELD' ? 'HELD' : 'RETURNED'}</td>
+        <td class="text-center font-mono font-bold text-amber-700">-</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  });
+
+  if (depCount === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="text-center">1</td>
+      <td class="italic text-slate-500">No client advances or CPOs recorded</td>
+      <td class="text-center">-</td>
+      <td class="text-center">-</td>
+      <td class="receipt-money-cell">0</td>
+      <td class="text-center font-mono">00</td>
+      <td class="receipt-money-cell">0</td>
+      <td class="text-center font-mono">00</td>
     `;
-  } else if (netBalance > 0) {
-    balanceRow.className = 'bg-emerald-50 text-emerald-900 font-black border-t-2 border-emerald-400';
-    balanceRow.innerHTML = `
-      <td class="py-3 text-sm uppercase">REFUND BALANCE DUE TO CLIENT</td>
-      <td colspan="2" class="text-right text-base text-emerald-600">+${netBalance.toLocaleString()}.00 ETB</td>
-    `;
-  } else {
-    balanceRow.className = 'bg-slate-50 text-slate-800 font-black border-t-2 border-slate-300';
-    balanceRow.innerHTML = `
-      <td class="py-3 text-sm uppercase">ACCOUNT SETTLED IN FULL</td>
-      <td colspan="2" class="text-right text-base text-emerald-600">0.00 ETB</td>
-    `;
+    tbody.appendChild(tr);
   }
-  tbody.appendChild(balanceRow);
 
-  // Security CPO Guarantee Note
-  const cpoDeposits = (job.deposits || []).filter(d => d.category === 'GUARANTEE_CPO');
-  const cpoNoteEl = document.getElementById('stmtCpoNote');
-  if (cpoDeposits.length > 0) {
-    const cpoDescriptions = cpoDeposits.map(d => 
-      `<strong>${Number(d.amount).toLocaleString()}.00 ETB</strong> at ${d.bank} [Status: <span class="${d.status === 'HELD' ? 'text-amber-800 font-bold' : 'text-emerald-700 font-bold'}">${d.status}</span>${d.returnedTo ? ' to ' + d.returnedTo : ''}]`
-    ).join('; ');
-    cpoNoteEl.innerHTML = `<strong>Security Guarantee Note:</strong> CPO Guarantee(s) of ${cpoDescriptions} recorded for empty container return guarantee.`;
-  } else {
-    cpoNoteEl.innerHTML = `<strong>Security Guarantee Note:</strong> No Security CPO Guarantees held on this file.`;
+  // Advance Received Subtotal Row
+  const cashSubtotalRow = document.createElement('tr');
+  cashSubtotalRow.innerHTML = `
+    <td colspan="6" class="text-right font-bold pr-2 bg-slate-50">Operational Advance Received (Subtotal)</td>
+    <td class="receipt-money-cell font-bold text-emerald-800 bg-slate-50">${totalOperatingCash.toLocaleString()}</td>
+    <td class="text-center font-mono font-bold text-emerald-800 bg-slate-50">00</td>
+  `;
+  tbody.appendChild(cashSubtotalRow);
+
+  // 3. SUMMARY CALCULATION BLOCK (Exact Bottom Stack matching Image 2)
+  const vatAmount = Math.round(serviceFee * 0.15);
+  const grandTotal = totalExpenses;
+  const netBalance = totalOperatingCash - grandTotal;
+
+  const summaryRows = [
+    { label: 'ድምር / Sub Total', val: totalExpenses, color: '' },
+    { label: 'ተ.እ.ታ / VAT (15% on Agency Fee)', val: vatAmount, color: '' },
+    { label: 'ጠቅላላ ወጪ / Grand Total', val: grandTotal, color: 'font-bold' },
+    { label: 'የተከፈለ ጥሬ ገንዘብ / Fuel & Advance Received', val: totalOperatingCash, color: 'text-emerald-800 font-bold' },
+    { label: netBalance < 0 ? 'የተጣራ ክፍያ / Net Balance Due Nohada' : 'የተጣራ ክፍያ / Refund Due Client', val: Math.abs(netBalance), color: netBalance < 0 ? 'text-rose-700 font-black' : 'text-emerald-700 font-black' }
+  ];
+
+  summaryRows.forEach(sr => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td colspan="6" class="text-right font-bold pr-3 ${sr.color}">${sr.label}</td>
+      <td class="receipt-money-cell ${sr.color}">${sr.val.toLocaleString()}</td>
+      <td class="text-center font-mono font-bold ${sr.color}">00</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Amount In Words
+  const wordsEl = document.getElementById('stmtAmountWords');
+  if (wordsEl) {
+    wordsEl.textContent = numberToWords(netBalance !== 0 ? netBalance : grandTotal);
   }
 
   document.getElementById('modalPrintStatement').classList.remove('hidden');
+}
 }
 
 function openPrintStatementForJob(jobId) {
