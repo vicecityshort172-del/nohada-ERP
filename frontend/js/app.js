@@ -1291,7 +1291,6 @@ function openPrintStatementModal() {
 
   document.getElementById('modalPrintStatement').classList.remove('hidden');
 }
-}
 
 function openPrintStatementForJob(jobId) {
   loadJobCockpit(jobId).then(() => {
